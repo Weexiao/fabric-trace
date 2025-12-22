@@ -17,10 +17,10 @@ type User struct {
 /*
 定义农产品结构体
 溯源码
-种植户输入
-工厂输入
-运输司机输入
-商店输入
+原料供应商输入
+制造商输入
+物流承运商输入
+经销商输入
 */
 type Fruit struct {
 	Traceability_code string        `json:"traceability_code"`
@@ -39,13 +39,13 @@ type HistoryQueryResult struct {
 }
 
 /*
-种植户
+原料供应商
 农产品的溯源码，一物一码，主打高端市场（自动生成）
 农产品名称
 产地
 种植时间
 采摘时间
-种植户名称
+原料供应商名称
 */
 type Farmer_input struct {
 	Fa_fruitName   string `json:"fa_fruitName"`
@@ -59,11 +59,11 @@ type Farmer_input struct {
 }
 
 /*
-工厂
+制造商
 商品名称
 生产批次
 出厂时间（可以防止黑心商家修改时间）
-工厂名称与厂址
+制造商名称与厂址
 联系电话
 */
 type Factory_input struct {
@@ -78,7 +78,7 @@ type Factory_input struct {
 }
 
 /*
-运输司机
+物流承运商
 姓名
 年龄
 电话
@@ -97,12 +97,12 @@ type Driver_input struct {
 }
 
 /*
-商店
+经销商
 存入时间
 销售时间
-商店名称
-商店位置
-商店电话
+经销商名称
+经销商位置
+经销商电话
 */
 type Shop_input struct {
 	Sh_storeTime   string `json:"sh_storeTime"`

@@ -70,8 +70,8 @@ func (s *SmartContract) Uplink(ctx contractapi.TransactionContextInterface, user
 	fruit.Traceability_code = traceability_code
 	// 不同用户类型的上链的参数不一致
 	switch userType {
-	// 种植户
-	case "种植户":
+	// 原料供应商
+	case "原料供应商":
 		// 将传入的农产品上链信息转换为Farmer_input结构体
 		fruit.Farmer_input.Fa_fruitName = arg1
 		fruit.Farmer_input.Fa_origin = arg2
@@ -81,8 +81,8 @@ func (s *SmartContract) Uplink(ctx contractapi.TransactionContextInterface, user
 		fruit.Farmer_input.Fa_img = arg6
 		fruit.Farmer_input.Fa_Txid = txid
 		fruit.Farmer_input.Fa_Timestamp = time
-	// 工厂
-	case "工厂":
+	// 制造商
+	case "制造商":
 		// 将传入的农产品上链信息转换为Factory_input结构体
 		fruit.Factory_input.Fac_productName = arg1
 		fruit.Factory_input.Fac_productionbatch = arg2
@@ -92,8 +92,8 @@ func (s *SmartContract) Uplink(ctx contractapi.TransactionContextInterface, user
 		fruit.Factory_input.Fac_img = arg6
 		fruit.Factory_input.Fac_Txid = txid
 		fruit.Factory_input.Fac_Timestamp = time
-	// 运输司机
-	case "运输司机":
+	// 物流承运商
+	case "物流承运商":
 		// 将传入的农产品上链信息转换为Driver_input结构体
 		fruit.Driver_input.Dr_name = arg1
 		fruit.Driver_input.Dr_age = arg2
@@ -103,8 +103,8 @@ func (s *SmartContract) Uplink(ctx contractapi.TransactionContextInterface, user
 		fruit.Driver_input.Dr_img = arg6
 		fruit.Driver_input.Dr_Txid = txid
 		fruit.Driver_input.Dr_Timestamp = time
-	// 商店
-	case "商店":
+	// 经销商
+	case "经销商":
 		// 将传入的农产品上链信息转换为Shop_input结构体
 		fruit.Shop_input.Sh_storeTime = arg1
 		fruit.Shop_input.Sh_sellTime = arg2

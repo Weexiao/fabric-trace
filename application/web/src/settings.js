@@ -1,6 +1,6 @@
 module.exports = {
 
-  title: '农产品溯源系统',
+  title: '价值网溯源系统',
 
   /**
    * @type {boolean} true | false

@@ -1,9 +1,9 @@
 <template>
   <div class="login-container">
-    <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
+    <el-form ref="loginForm" :model="isLoginPage ? loginForm : registerForm" :rules="isLoginPage ? loginRules : registerRules" class="login-form" autocomplete="on" label-position="left">
 
       <div class="title-container">
-        <h3 class="title" style="color: white;">基于区块链的农产品溯源系统</h3>
+        <h3 class="title" style="color: white;">基于区块链的价值网溯源系统</h3>
       </div>
       <div v-show="isLoginPage">
         <el-form-item prop="username">
@@ -12,12 +12,12 @@
           </span>
           <el-input
             ref="username"
-            v-model="loginForm.username"
+            v-model.trim="loginForm.username"
             placeholder="请输入账号"
             name="username"
             type="text"
             tabindex="1"
-            auto-complete="on"
+            autocomplete="on"
           />
         </el-form-item>
 
@@ -26,22 +26,22 @@
             <svg-icon icon-class="password" />
           </span>
           <el-input
-            :key="passwordType"
-            ref="password"
+            :key="passwordTypes.login"
+            ref="loginPassword"
             v-model="loginForm.password"
-            :type="passwordType"
+            :type="passwordTypes.login"
             placeholder="请输入密码"
             name="password"
             tabindex="2"
-            auto-complete="on"
+            autocomplete="on"
             @keyup.enter.native="handleLogin"
           />
-          <span class="show-pwd" @click="showPwd">
-            <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
+          <span class="show-pwd" @click="showPwd('login')">
+            <svg-icon :icon-class="passwordTypes.login === 'password' ? 'eye' : 'eye-open'" />
           </span>
         </el-form-item>
-        <el-button :loading="loading" type="info" style="width:20%;margin-bottom:30px;" @click="handleRegister">注册</el-button>
-        <el-button :loading="loading" type="primary" style="width:30%;margin-bottom:30px; float: right" @click.native.prevent="handleLogin">登录</el-button>
+        <el-button :loading="loading" :disabled="loading" type="info" style="width:20%;margin-bottom:30px;" @click="handleRegister">注册</el-button>
+        <el-button :loading="loading" :disabled="loading" type="primary" style="width:30%;margin-bottom:30px; float: right" @click.prevent="handleLogin">登录</el-button>
       </div>
       <div v-show="!isLoginPage">
         <el-form-item prop="username">
@@ -49,11 +49,11 @@
             <svg-icon icon-class="user" />
           </span>
           <el-input
-            v-model="registerForm.username"
+            v-model.trim="registerForm.username"
             placeholder="请输入账号"
             name="username"
             type="text"
-            auto-complete="on"
+            autocomplete="on"
           />
         </el-form-item>
         <el-form-item prop="password">
@@ -61,17 +61,17 @@
             <svg-icon icon-class="password" />
           </span>
           <el-input
-            :key="passwordType"
-            ref="password"
+            :key="passwordTypes.register1"
+            ref="registerPassword1"
             v-model="registerForm.password"
-            :type="passwordType"
+            :type="passwordTypes.register1"
             placeholder="请输入密码"
             name="password"
-            auto-complete="on"
+            autocomplete="on"
             style="color: white !important;"
           />
-          <span class="show-pwd" @click="showPwd">
-            <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
+          <span class="show-pwd" @click="showPwd('register1')">
+            <svg-icon :icon-class="passwordTypes.register1 === 'password' ? 'eye' : 'eye-open'" />
           </span>
         </el-form-item>
         <el-form-item prop="password2">
@@ -79,17 +79,19 @@
             <svg-icon icon-class="password" />
           </span>
           <el-input
+            :key="passwordTypes.register2"
+            ref="registerPassword2"
             v-model="registerForm.password2"
             placeholder="请再次输入密码"
             name="password"
-            auto-complete="on"
-            :type="passwordType"
+            autocomplete="on"
+            :type="passwordTypes.register2"
           />
-          <span class="show-pwd" @click="showPwd">
-            <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
+          <span class="show-pwd" @click="showPwd('register2')">
+            <svg-icon :icon-class="passwordTypes.register2 === 'password' ? 'eye' : 'eye-open'" />
           </span>
         </el-form-item>
-        <el-form-item style="width: 200px">
+        <el-form-item prop="userType" style="width: 200px">
           <el-select v-model="registerForm.userType" placeholder="请选择角色">
             <el-option
               v-for="item in options"
@@ -99,8 +101,8 @@
             />
           </el-select>
         </el-form-item>
-        <el-button :loading="loading" type="info" style="width:20%;margin-bottom:30px;" @click="handleRegister">返回</el-button>
-        <el-button :loading="loading" type="primary" style="width:30%;margin-bottom:30px; float: right" @click.native.prevent="submitRegister">提交注册</el-button>
+        <el-button :loading="loading" :disabled="loading" type="info" style="width:20%;margin-bottom:30px;" @click="handleRegister">返回</el-button>
+        <el-button :loading="loading" :disabled="loading" type="primary" style="width:30%;margin-bottom:30px; float: right" @click.prevent="submitRegister">提交注册</el-button>
       </div>
       <!-- <div class="tips">
         <span style="margin-right:20px;">提示：可以放一些提示</span>
@@ -115,17 +117,60 @@
 export default {
   name: 'Login',
   data() {
+    // 仅字母/数字/下划线
+    const usernamePattern = /^[a-zA-Z0-9_]+$/
+    // 注册密码复杂度（>=8 且包含字母和数字）
+    const validatePasswordComplex = (rule, value, callback) => {
+      if (!value) return callback(new Error('请输入密码'))
+      if (String(value).length < 8) return callback(new Error('密码至少8个字符'))
+      if (!/[A-Za-z]/.test(value) || !/\d/.test(value)) return callback(new Error('密码需包含字母和数字'))
+      return callback()
+    }
+    // 二次密码一致性校验
+    const equalTo = (rule, value, callback) => {
+      if (!value) return callback(new Error('请再次输入密码'))
+      if (value !== this.registerForm.password) return callback(new Error('两次密码不一致'))
+      return callback()
+    }
+
     return {
       loginForm: {
         username: '',
         password: ''
       },
       loginRules: {
-        username: [{ required: true }],
-        password: [{ required: true }]
+        username: [
+          { required: true, message: '请输入账号', trigger: 'blur' },
+          { type: 'string', min: 3, message: '账号至少3个字符', trigger: 'blur' }
+        ],
+        password: [
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { type: 'string', min: 6, message: '密码至少6个字符', trigger: 'blur' }
+        ]
+      },
+      registerRules: {
+        username: [
+          { required: true, message: '请输入账号', trigger: 'blur' },
+          { type: 'string', min: 3, message: '账号至少3个字符', trigger: 'blur' },
+          { pattern: usernamePattern, message: '仅限字母/数字/下划线', trigger: 'blur' }
+        ],
+        password: [
+          { validator: validatePasswordComplex, trigger: 'blur' }
+        ],
+        password2: [
+          { validator: equalTo, trigger: 'blur' }
+        ],
+        userType: [
+          { required: true, message: '请选择角色', trigger: 'change' }
+        ]
       },
       loading: false,
-      passwordType: 'password',
+      // 独立的密码可见性控制
+      passwordTypes: {
+        login: 'password',
+        register1: 'password',
+        register2: 'password'
+      },
       redirect: undefined,
       isLoginPage: true,
       registerForm: {
@@ -135,20 +180,20 @@ export default {
         userType: ''
       },
       options: [{
-        value: '种植户',
-        label: '种植户'
+        value: '原料供应商',
+        label: '原料供应商'
       }, {
-        value: '工厂',
-        label: '工厂'
+        value: '制造商',
+        label: '制造商'
       }, {
-        value: '运输司机',
-        label: '运输司机'
+        value: '物流承运商',
+        label: '物流承运商'
       }, {
-        value: '商店',
-        label: '商店'
+        value: '经销商',
+        label: '经销商'
       }, {
-        value: '消费者',
-        label: '消费者'
+        value: '零售商',
+        label: '零售商'
       }]
     }
   },
@@ -161,51 +206,87 @@ export default {
     }
   },
   methods: {
-    showPwd() {
-      if (this.passwordType === 'password') {
-        this.passwordType = ''
-      } else {
-        this.passwordType = 'password'
+    showPwd(which) {
+      // 切换指定输入框的显示/隐藏
+      const nextType = this.passwordTypes[which] === 'password' ? 'text' : 'password'
+      this.$set(this.passwordTypes, which, nextType)
+      // 聚焦到对应输入框
+      const refMap = {
+        login: 'loginPassword',
+        register1: 'registerPassword1',
+        register2: 'registerPassword2'
       }
       this.$nextTick(() => {
-        this.$refs.password.focus()
+        const refName = refMap[which]
+        if (refName && this.$refs[refName]) {
+          this.$refs[refName].focus()
+        }
       })
     },
     handleLogin() {
-      this.loading = true
-      this.$store.dispatch('user/login', this.loginForm).then(() => {
-        this.$router.push({ path: this.redirect || '/' })
-        this.loading = false
-      }).catch(() => {
-        this.loading = false
+      this.$refs.loginForm.validate(valid => {
+        if (!valid) {
+          return
+        }
+        this.loading = true
+        this.$store.dispatch('user/login', this.loginForm).then(() => {
+          this.$router.push({ path: this.redirect || '/' })
+          // 登录成功后清空密码
+          this.loginForm.password = ''
+          // 登录成功后重置可见性
+          this.passwordTypes.login = 'password'
+        }).catch(err => {
+          this.$message.error(err && err.message || '登录失败')
+        }).finally(() => {
+          this.loading = false
+        })
       })
     },
     handleRegister() {
       // 切换登录注册
       this.isLoginPage = !this.isLoginPage
+      // 切换时统一重置所有密码为隐藏
+      this.passwordTypes = { login: 'password', register1: 'password', register2: 'password' }
+      // 切换后清空并清理校验提示
+      this.$nextTick(() => {
+        if (this.isLoginPage) {
+          this.$refs.loginForm.clearValidate()
+        }
+      })
     },
     submitRegister() {
-      if (this.registerForm.password !== this.registerForm.password2) {
-        this.$message.error('两次密码不一致')
-        return
-      }
-      const loading = this.$loading({
-        lock: true,
-        text: '注册中...',
-        spinner: 'el-icon-loading',
-        background: 'rgba(0, 0, 0, 0.7)'
-      })
-      this.$store.dispatch('user/register', this.registerForm).then(response => {
-        this.$router.push({ path: this.redirect || '/' })
-        this.loading = false
-        this.$message({
-          message: '注册成功，链上交易ID：' + response.txid,
-          type: 'success'
+      this.$refs.loginForm.validate(valid => {
+        if (!valid) {
+          return
+        }
+        if (this.registerForm.password !== this.registerForm.password2) {
+          this.$message.error('两次密码不一致')
+          return
+        }
+        const overlay = this.$loading({
+          lock: true,
+          text: '注册中...',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.7)'
         })
-        loading.close()
-        this.handleRegister()
-      }).catch(() => {
-        loading.close()
+        this.loading = true
+        this.$store.dispatch('user/register', this.registerForm).then(response => {
+          this.$router.push({ path: this.redirect || '/' })
+          this.$message({
+            message: '注册成功，链上交易ID：' + response.txid,
+            type: 'success'
+          })
+          // 注册成功后清空注册表单
+          this.registerForm = { username: '', password: '', password2: '', userType: '' }
+          // 重置密码可见性并切回登录页
+          this.passwordTypes = { login: 'password', register1: 'password', register2: 'password' }
+          this.handleRegister() // 切回登录页
+        }).catch(err => {
+          this.$message.error(err && err.message || '注册失败')
+        }).finally(() => {
+          overlay.close()
+          this.loading = false
+        })
       })
     }
   }
@@ -220,7 +301,7 @@ $bg:#283443;
 $light_gray:#fff;
 $cursor: #fff;
 
-@supports (-webkit-mask: none) and (not (cater-color: $cursor)) {
+@supports (-webkit-mask: none) and (not (caret-color: $cursor)) {
   .login-container .el-input input {
     color: $cursor;
   }
