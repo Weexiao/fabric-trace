@@ -1,71 +1,71 @@
 <template>
   <div>
-    <h1 style="color: #1f2f3d; text-align: center;">5分钟构建任意溯源系统</h1>
-    <p style="color: #5e6d82; text-align: center;">请对比字段填写，生成个性化的溯源系统。激活码仅可使用一次，</p>
-    <p style="color: #5e6d82; text-align: center;">提交前请认真对比，生成后请尽快下载并备份，源码在服务器保留一周后删除。</p>
+    <h1 style="color: #1f2f3d; text-align: center;">{{ $t('build.title') }}</h1>
+    <p style="color: #5e6d82; text-align: center;">{{ $t('build.p1') }}</p>
+    <p style="color: #5e6d82; text-align: center;">{{ $t('build.p2') }}</p>
     <div style="text-align: center; margin-bottom: 20px;">
       <a href="https://www.bilibili.com/video/BV1Ar421H7TK" style="color: #409EFF; text-decoration: underline;">
-        B站：使用教程
+        {{ $t('build.tutorial') }}
       </a>
     </div>
-    <el-button type="text" @click="dialog2Visible = true">购买激活码</el-button>
+    <el-button type="text" @click="dialog2Visible = true">{{ $t('build.buyCode') }}</el-button>
     <el-dialog
-      title="删除此页面"
+      :title="$t('build.deletePage')"
       :visible.sync="dialog1Visible"
       width="30%"
       :before-close="handleClose"
     >
-      <span>1. 在fabric-trace/application/web目录下，运行./rmbuildsyspage.sh</span>
+      <span>{{ $t('build.deleteStep1') }}</span>
       <br>
-      <span style="display: block;margin-top: 20px;">2.重新启动前端，npm run dev</span>
+      <span style="display: block;margin-top: 20px;">{{ $t('build.deleteStep2') }}</span>
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="dialog1Visible = false">确 定</el-button>
+        <el-button type="primary" @click="dialog1Visible = false">{{ $t('build.confirm') }}</el-button>
       </span>
     </el-dialog>
 
     <el-dialog
-      title="开发不易，感谢支持！"
+      :title="$t('build.supportTitle')"
       :visible.sync="dialog2Visible"
       width="30%"
       :before-close="handleClose"
     >
-      <span>激活码售价：269元</span>
+      <span>{{ $t('build.price') }}</span>
 
       <br>
-      <span style="display: block; margin-top: 20px;">请加QQ群776873343联系群主购买 （补差价可包搭建）</span>
+      <span style="display: block; margin-top: 20px;">{{ $t('build.contact') }}</span>
       <br>
-      <span style="display: block; margin-top: 20px;">购买课程后可99元购买激活码</span>
+      <span style="display: block; margin-top: 20px;">{{ $t('build.discount') }}</span>
       <br>
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="dialog2Visible = false">确 定</el-button>
+        <el-button type="primary" @click="dialog2Visible = false">{{ $t('build.confirm') }}</el-button>
       </span>
     </el-dialog>
 
     <el-dialog
-      title="构建成功！"
+      :title="$t('build.buildSuccess')"
       :visible.sync="dialog3Visible"
       width="30%"
       :before-close="handleClose"
     >
-      <span>下载地址：</span>
+      <span>{{ $t('build.download') }}</span>
       <br>
       <span style="display: block;margin-top: 20px;">{{ downloadUrl }} </span>
       <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="dialog3Visible = false">确 定</el-button>
+        <el-button type="primary" @click="dialog3Visible = false">{{ $t('build.confirm') }}</el-button>
       </span>
     </el-dialog>
 
     <div class="form-container">
       <el-form ref="form" :model="form" label-width="150px" class="form">
 
-        <el-form-item v-for="(value, key) in form" :key="key" :label="key">
-          <el-input v-model="form[key]" :placeholder="'请输入 ' + key + ' 值'" />
+        <el-form-item v-for="(v, key) in form" :key="key" :label="key">
+          <el-input v-model="form[key]" :placeholder="$t('validate.pleaseEnter') + ' ' + key + ' ' + '值'" />
         </el-form-item>
         <div style="text-align: center; margin-top: 20px;">
-          <el-button v-loading="loading" type="primary" element-loading-text="构建中，稍等1分钟" @click="submitForm">开始构建</el-button>
+          <el-button :loading="loading" type="primary" @click="submitForm">{{ $t('build.startBuild') }}</el-button>
         </div>
       </el-form>
-      <el-button type="text" style="display: block;margin-top: 20px;" @click="dialog1Visible = true">如何删除此页面？</el-button>
+      <el-button type="text" style="display: block;margin-top: 20px;" @click="dialog1Visible = true">{{ $t('build.howToDelete') }}</el-button>
     </div>
     <div style="height: 30px;" />
   </div>
@@ -125,29 +125,23 @@ export default {
         params.append(key, this.form[key])
       }
       fetch('http://realcool.top:8088/activate', {
-      // fetch('http://127.0.0.1:8088/activate', {
-
         method: 'POST',
         body: params,
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       })
         .then(response => response.json())
         .then(data => {
-          console.log('响应数据：', data)
           this.loading = false
           this.downloadUrl = data.msg
           // eslint-disable-next-line eqeqeq
           if (data.code == 0) {
-            // this.$message.success('构建成功！' + data.msg);
             this.dialog3Visible = true
           } else {
-            this.$message.error('构建失败：' + data.msg)
-            console.log('构建失败：', data.msg)
+            this.$message.error(this.$t('build.buildFailed', { msg: data.msg }))
           }
         })
         .catch(error => {
-          this.$message.error('提交失败，请重试！')
-          console.error('提交失败：' + error)
+          this.$message.error(this.$t('build.submitFailed'), { msg: error.toString() })
           this.loading = false
         })
     }

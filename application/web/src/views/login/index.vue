@@ -3,7 +3,7 @@
     <el-form ref="loginForm" :model="isLoginPage ? loginForm : registerForm" :rules="isLoginPage ? loginRules : registerRules" class="login-form" autocomplete="on" label-position="left">
 
       <div class="title-container">
-        <h3 class="title" style="color: white;">基于区块链的价值网溯源系统</h3>
+        <h3 class="title" style="color: white;">{{ $t('login.title') }}</h3>
       </div>
       <div v-show="isLoginPage">
         <el-form-item prop="username">
@@ -13,7 +13,8 @@
           <el-input
             ref="username"
             v-model.trim="loginForm.username"
-            placeholder="请输入账号"
+            v-sanitize="{ max: LENGTHS.login.username }"
+            :placeholder="$t('login.usernamePlaceholder')"
             name="username"
             type="text"
             tabindex="1"
@@ -29,8 +30,9 @@
             :key="passwordTypes.login"
             ref="loginPassword"
             v-model="loginForm.password"
+            v-sanitize="{ max: LENGTHS.login.password }"
             :type="passwordTypes.login"
-            placeholder="请输入密码"
+            :placeholder="$t('login.passwordPlaceholder')"
             name="password"
             tabindex="2"
             autocomplete="on"
@@ -40,8 +42,8 @@
             <svg-icon :icon-class="passwordTypes.login === 'password' ? 'eye' : 'eye-open'" />
           </span>
         </el-form-item>
-        <el-button :loading="loading" :disabled="loading" type="info" style="width:20%;margin-bottom:30px;" @click="handleRegister">注册</el-button>
-        <el-button :loading="loading" :disabled="loading" type="primary" style="width:30%;margin-bottom:30px; float: right" @click.prevent="handleLogin">登录</el-button>
+        <el-button :loading="loading" :disabled="loading" type="info" style="width:20%;margin-bottom:30px;" @click="handleRegister">{{ $t('login.register') }}</el-button>
+        <el-button :loading="loading" :disabled="loading" type="primary" style="width:30%;margin-bottom:30px; float: right" @click.prevent="handleLogin">{{ $t('login.login') }}</el-button>
       </div>
       <div v-show="!isLoginPage">
         <el-form-item prop="username">
@@ -50,7 +52,8 @@
           </span>
           <el-input
             v-model.trim="registerForm.username"
-            placeholder="请输入账号"
+            v-sanitize="{ max: LENGTHS.login.username }"
+            :placeholder="$t('login.usernamePlaceholder')"
             name="username"
             type="text"
             autocomplete="on"
@@ -64,8 +67,9 @@
             :key="passwordTypes.register1"
             ref="registerPassword1"
             v-model="registerForm.password"
+            v-sanitize="{ max: LENGTHS.login.password }"
             :type="passwordTypes.register1"
-            placeholder="请输入密码"
+            :placeholder="$t('login.passwordPlaceholder')"
             name="password"
             autocomplete="on"
             style="color: white !important;"
@@ -82,7 +86,8 @@
             :key="passwordTypes.register2"
             ref="registerPassword2"
             v-model="registerForm.password2"
-            placeholder="请再次输入密码"
+            v-sanitize="{ max: LENGTHS.login.password }"
+            :placeholder="$t('login.passwordAgainPlaceholder')"
             name="password"
             autocomplete="on"
             :type="passwordTypes.register2"
@@ -92,7 +97,7 @@
           </span>
         </el-form-item>
         <el-form-item prop="userType" style="width: 200px">
-          <el-select v-model="registerForm.userType" placeholder="请选择角色">
+          <el-select v-model="registerForm.userType" :placeholder="$t('login.selectRole')">
             <el-option
               v-for="item in options"
               :key="item.value"
@@ -101,8 +106,8 @@
             />
           </el-select>
         </el-form-item>
-        <el-button :loading="loading" :disabled="loading" type="info" style="width:20%;margin-bottom:30px;" @click="handleRegister">返回</el-button>
-        <el-button :loading="loading" :disabled="loading" type="primary" style="width:30%;margin-bottom:30px; float: right" @click.prevent="submitRegister">提交注册</el-button>
+        <el-button :loading="loading" :disabled="loading" type="info" style="width:20%;margin-bottom:30px;" @click="handleRegister">{{ $t('login.back') }}</el-button>
+        <el-button :loading="loading" :disabled="loading" type="primary" style="width:30%;margin-bottom:30px; float: right" @click.prevent="submitRegister">{{ $t('login.submitRegister') }}</el-button>
       </div>
       <!-- <div class="tips">
         <span style="margin-right:20px;">提示：可以放一些提示</span>
@@ -113,6 +118,8 @@
 </template>
 
 <script>
+import { LENGTHS } from '@/utils/limits'
+import { sanitize } from '@/utils/sanitize'
 
 export default {
   name: 'Login',
@@ -121,15 +128,15 @@ export default {
     const usernamePattern = /^[a-zA-Z0-9_]+$/
     // 注册密码复杂度（>=8 且包含字母和数字）
     const validatePasswordComplex = (rule, value, callback) => {
-      if (!value) return callback(new Error('请输入密码'))
-      if (String(value).length < 8) return callback(new Error('密码至少8个字符'))
-      if (!/[A-Za-z]/.test(value) || !/\d/.test(value)) return callback(new Error('密码需包含字母和数字'))
+      if (!value) return callback(new Error(this.$t('login.rules.passwordRequired')))
+      if (String(value).length < 8) return callback(new Error(this.$t('login.rules.passwordMin')))
+      if (!/[A-Za-z]/.test(value) || !/\d/.test(value)) return callback(new Error(this.$t('login.rules.passwordComplex')))
       return callback()
     }
     // 二次密码一致性校验
     const equalTo = (rule, value, callback) => {
-      if (!value) return callback(new Error('请再次输入密码'))
-      if (value !== this.registerForm.password) return callback(new Error('两次密码不一致'))
+      if (!value) return callback(new Error(this.$t('login.rules.passwordAgainRequired')))
+      if (value !== this.registerForm.password) return callback(new Error(this.$t('login.rules.passwordNotEqual')))
       return callback()
     }
 
@@ -140,18 +147,18 @@ export default {
       },
       loginRules: {
         username: [
-          { required: true, message: '请输入账号', trigger: 'blur' },
-          { type: 'string', min: 3, message: '账号至少3个字符', trigger: 'blur' }
+          { required: true, message: this.$t('login.rules.usernameRequired'), trigger: 'blur' },
+          { type: 'string', min: 3, message: this.$t('login.rules.usernameMin'), trigger: 'blur' }
         ],
         password: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
-          { type: 'string', min: 6, message: '密码至少6个字符', trigger: 'blur' }
+          { required: true, message: this.$t('login.rules.passwordRequired'), trigger: 'blur' },
+          { type: 'string', min: 6, message: this.$t('login.rules.passwordMin'), trigger: 'blur' }
         ]
       },
       registerRules: {
         username: [
-          { required: true, message: '请输入账号', trigger: 'blur' },
-          { type: 'string', min: 3, message: '账号至少3个字符', trigger: 'blur' },
+          { required: true, message: this.$t('login.rules.usernameRequired'), trigger: 'blur' },
+          { type: 'string', min: 3, message: this.$t('login.rules.usernameMin'), trigger: 'blur' },
           { pattern: usernamePattern, message: '仅限字母/数字/下划线', trigger: 'blur' }
         ],
         password: [
@@ -161,7 +168,7 @@ export default {
           { validator: equalTo, trigger: 'blur' }
         ],
         userType: [
-          { required: true, message: '请选择角色', trigger: 'change' }
+          { required: true, message: this.$t('login.selectRole'), trigger: 'change' }
         ]
       },
       loading: false,
@@ -194,7 +201,8 @@ export default {
       }, {
         value: '零售商',
         label: '零售商'
-      }]
+      }],
+      LENGTHS: Object.assign({ login: { username: 50, password: 100 }}, LENGTHS)
     }
   },
   watch: {
@@ -224,6 +232,9 @@ export default {
       })
     },
     handleLogin() {
+      // fallback sanitize before submit
+      this.loginForm.username = sanitize(this.loginForm.username, this.LENGTHS.login.username)
+      this.loginForm.password = sanitize(this.loginForm.password, this.LENGTHS.login.password)
       this.$refs.loginForm.validate(valid => {
         if (!valid) {
           return
@@ -236,7 +247,7 @@ export default {
           // 登录成功后重置可见性
           this.passwordTypes.login = 'password'
         }).catch(err => {
-          this.$message.error(err && err.message || '登录失败')
+          this.$message.error((err && err.message) || this.$t('login.messages.loginFailed'))
         }).finally(() => {
           this.loading = false
         })
@@ -255,17 +266,21 @@ export default {
       })
     },
     submitRegister() {
+      // fallback sanitize before submit
+      this.registerForm.username = sanitize(this.registerForm.username, this.LENGTHS.login.username)
+      this.registerForm.password = sanitize(this.registerForm.password, this.LENGTHS.login.password)
+      this.registerForm.password2 = sanitize(this.registerForm.password2, this.LENGTHS.login.password)
       this.$refs.loginForm.validate(valid => {
         if (!valid) {
           return
         }
         if (this.registerForm.password !== this.registerForm.password2) {
-          this.$message.error('两次密码不一致')
+          this.$message.error(this.$t('login.rules.passwordNotEqual'))
           return
         }
         const overlay = this.$loading({
           lock: true,
-          text: '注册中...',
+          text: this.$t('login.messages.registering'),
           spinner: 'el-icon-loading',
           background: 'rgba(0, 0, 0, 0.7)'
         })
@@ -282,7 +297,7 @@ export default {
           this.passwordTypes = { login: 'password', register1: 'password', register2: 'password' }
           this.handleRegister() // 切回登录页
         }).catch(err => {
-          this.$message.error(err && err.message || '注册失败')
+          this.$message.error((err && err.message) || this.$t('login.messages.registerFailed'))
         }).finally(() => {
           overlay.close()
           this.loading = false

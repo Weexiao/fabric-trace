@@ -11,9 +11,11 @@ import '@/styles/index.scss' // global css
 import App from './App'
 import store from './store'
 import router from './router'
+import i18n from './i18n'
 
 import '@/icons' // icon
 import '@/permission' // permission control
+import '@/directives/sanitize'
 
 /**
  * If you don't want to use mock-server
@@ -39,5 +41,6 @@ new Vue({
   el: '#app',
   router,
   store,
+  i18n,
   render: h => h(App)
 })

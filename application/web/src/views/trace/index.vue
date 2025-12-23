@@ -1,6 +1,6 @@
 <template>
   <div class="trace-container">
-    <el-input v-model="input" placeholder="请输入溯源码查询" style="width: 300px;margin-right: 15px;" />
+    <el-input v-model="input" :placeholder="$t ? $t('form.inputTraceCode') : '请输入溯源码查询'" style="width: 300px;margin-right: 15px;" :maxlength="LENGTHS.traceCode" @input="onInputChange" />
     <el-button type="primary" plain @click="FruitInfo"> 查询 </el-button>
     <el-button type="success" plain @click="AllFruitInfo"> 获取所有产品信息 </el-button>
     <el-table
@@ -155,7 +155,9 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { getFruitInfo, getFruitList, getAllFruitInfo, getFruitHistory } from '@/api/trace'
+import { getFruitInfo, getFruitList, getAllFruitInfo } from '@/api/trace'
+import { sanitize } from '@/utils/sanitize'
+import { LENGTHS } from '@/utils/limits'
 
 export default {
   name: 'Trace',
@@ -164,7 +166,8 @@ export default {
       tracedata: [],
       loading: false,
       input: '',
-      baseApi: process.env.VUE_APP_BASE_API
+      baseApi: process.env.VUE_APP_BASE_API,
+      LENGTHS
     }
   },
   computed: {
@@ -185,25 +188,31 @@ export default {
     }
   },
   methods: {
+    onInputChange(val) {
+      const v = sanitize(String(val || '').replace(/[^\d]/g, ''), LENGTHS.traceCode)
+      if (v !== this.input) this.input = v
+    },
     AllFruitInfo() {
       getAllFruitInfo().then(res => {
         this.tracedata = JSON.parse(res.data)
       })
     },
-    FruitHistory() {
-      getFruitHistory().then(res => {
-        // console.log(res)
-      })
-    },
     FruitInfo() {
+      const code = sanitize(String(this.input || '').replace(/[^\d]/g, ''), LENGTHS.traceCode)
+      if (!code) {
+        this.$message.error('请输入有效的溯源码')
+        return
+      }
       var formData = new FormData()
-      formData.append('traceability_code', this.input)
+      formData.append('traceability_code', code)
       getFruitInfo(formData).then(res => {
         if (res.code === 200) {
-          // console.log(res)
           this.tracedata = []
-          this.tracedata[0] = JSON.parse(res.data)
-          return
+          try {
+            this.tracedata[0] = JSON.parse(res.data)
+          } catch (e) {
+            this.$message.error('返回数据解析失败')
+          }
         } else {
           this.$message.error(res.message)
         }
