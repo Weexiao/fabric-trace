@@ -622,7 +622,10 @@ export default {
           const val = this.$t(key)
           if (val && val !== key) return val
         }
-      } catch (e) {}
+      } catch (e) {
+        // 对错误进行处理
+        console.error('Translation error:', e)
+      }
       return fallback
     },
 
