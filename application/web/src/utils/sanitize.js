@@ -44,5 +44,26 @@ export function sanitize(input, max) {
   return clampLen(stripDangerous(input), max)
 }
 
+// 将字符串进行 HTML 转义，避免插入 DOM 时产生脚本执行
+export function escapeHtml(input) {
+  const s = String(input == null ? '' : input)
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+// 二次校验与清洗：去除控制字符、限制长度、HTML 转义
+export function normalizeDisplay(input, { max = 200, trim = true } = {}) {
+  let s = String(input == null ? '' : input)
+  // 去除控制字符
+  s = s.replace(/[\x00-\x1F\x7F]/g, ' ')
+  if (trim) s = s.trim()
+  if (s.length > max) s = s.slice(0, max)
+  return escapeHtml(s)
+}
+
 // remove default export to avoid unused default lint warning
 // export default { escapeHTML, stripDangerous, clampLen, sanitize }

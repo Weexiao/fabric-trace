@@ -71,11 +71,6 @@
                 <el-input v-model="tracedata.Farmer_input.Fa_farmerName" clearable :placeholder="$t('form.farmer.inputSupplier')" :maxlength="LENGTHS.farmer.farmerName" show-word-limit />
               </el-form-item>
             </el-col>
-<!--            <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">-->
-<!--              <el-form-item :label="$t('form.farmer.phone') + ':'" class="form-item" prop="Farmer_input.Fa_supplierPhone">-->
-<!--                <el-input v-model="tracedata.Farmer_input.Fa_supplierPhone" type="tel" :maxlength="LENGTHS.farmer.supplierPhone" show-word-limit clearable :placeholder="$t('form.farmer.inputPhone')" />-->
-<!--              </el-form-item>-->
-<!--            </el-col>-->
           </template>
 
           <template v-if="userType==='制造商'">
@@ -198,8 +193,9 @@
                 <el-button type="primary" size="mini">{{ $t('common.uploadChooseImg') }}</el-button>
               </el-upload>
 
-              <div v-if="imagePreview" style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
-                <img :src="imagePreview" alt="预览图" style="max-width: 100%; max-height: 150px; border: 1px solid #dcdfe6;">
+              <div v-if="imagePreview" class="image-preview-row">
+                <img :src="imagePreview" alt="预览图" class="img-preview">
+                <el-button type="primary" size="mini" plain @click="openDownload(imagePreview, tracedata.traceability_code || 'image')">{{ $t('actions.download') || '下载' }}</el-button>
                 <el-button type="danger" size="mini" plain @click="clearImage">{{ $t('common.deleteImage') }}</el-button>
               </div>
             </el-form-item>
@@ -218,7 +214,7 @@
             :loading="submitting"
             :disabled="submitting"
             @click="submittracedata()"
-          >{{ $t('common.submit') }}</el-button>
+          >{{ $t('common.submit') || '提 交' }}</el-button>
         </template>
         <template v-else>
           <span class="footer-tip">{{ $t('common.noPermission') }}</span>
@@ -247,6 +243,7 @@ import placeholders from '@/utils/placeholders'
 import { createObjectURLSafe, revokeObjectURLSafe, revokeAllObjectURLs } from '@/utils/blob'
 import { LENGTHS } from '@/utils/limits'
 import { sanitize } from '@/utils/sanitize'
+import { normalizeRow } from '@/utils/normalize'
 
 export default {
   name: 'Uplink',
@@ -631,12 +628,14 @@ export default {
 
     // 通用快捷时间：支持此刻/1小时前/昨天/一周前/一月前/三月前
     commonShortcuts() {
+      /* eslint-disable no-unused-vars */
       const now = new Date()
       const hourAgo = new Date(now.getTime() - 3600 * 1000)
       const yesterday = new Date(now.getTime() - 24 * 3600 * 1000)
       const weekAgo = new Date(now.getTime() - 7 * 24 * 3600 * 1000)
       const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds())
       const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds())
+      /* eslint-enable no-unused-vars */
       const item = (key, fallback, d) => ({
         text: this.tOr(key, fallback),
         onClick: (picker) => picker.$emit('pick', d)
@@ -668,8 +667,7 @@ export default {
 
     onCarNumberInput(val) {
       if (typeof val === 'string') {
-        const cleaned = val.toUpperCase().replace(/[^A-Z0-9\u4e00-\u9fa5]/g, '')
-        this.tracedata.Driver_input.Dr_carNumber = cleaned
+        this.tracedata.Driver_input.Dr_carNumber = val.toUpperCase().replace(/[^A-Z0-9\u4e00-\u9fa5]/g, '')
       }
     },
     onTraceCodeInput(val) {
@@ -769,11 +767,11 @@ export default {
       if (this.userType !== '原料供应商') return callback()
       return value ? callback() : callback(new Error('请输入供应商名称'))
     },
-    validateFaSupplierPhone(rule, value, callback) {
-      if (this.userType !== '原料供应商') return callback()
-      if (!value) return callback(new Error('请输入供应商电话'))
-      return this.isValidPhone(value) ? callback() : callback(new Error('请输入有效的电话号码'))
-    },
+    // validateFaSupplierPhone(rule, value, callback) {
+    //   if (this.userType !== '原料供应商') return callback()
+    //   if (!value) return callback(new Error('请输入供应商电话'))
+    //   return this.isValidPhone(value) ? callback() : callback(new Error('请输入有效的电话号码'))
+    // },
 
     // 制造商
     validateFacProductName(rule, value, callback) {
@@ -1107,15 +1105,12 @@ export default {
         try {
           const formData = this.buildFormData()
           const res = await uplink(formData)
-          if (res.code === 200) {
-            const code = res.traceability_code || this.tracedata.traceability_code
-            const txid = res.txid || res.txId || res.txID || ''
-            this.successInfo = { code, txid }
-            this.successDialogVisible = true
-            this.msgSuccess(this.$t('result.success', { txid: txid || '-', code }))
-          } else {
-            this.msgError(this.$t('result.fail'))
-          }
+          // 统一：拦截器已处理非200为异常，此处即成功分支
+          const code = res.traceability_code || (this.tracedata && this.tracedata.traceability_code)
+          const txid = res.txid || res.txId || res.txID || ''
+          this.successInfo = { code, txid }
+          this.successDialogVisible = true
+          this.msgSuccess(this.$t('result.success', { txid: txid || '-', code }))
         } catch (err) {
           let detail = ''
           try {
@@ -1167,30 +1162,6 @@ export default {
       if (this.imagePreview) { revokeObjectURLSafe(this.imagePreview); this.imagePreview = null }
       this.$nextTick(() => { this.$refs.form && this.$refs.form.clearValidate() })
     },
-    copyText(text) {
-      const val = String(text || '')
-      if (!val) return
-      if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(val).then(() => {
-          this.$message.success(this.$t('actions.copied'))
-        }).catch(() => {
-          this._legacyCopy(val)
-        })
-      } else {
-        this._legacyCopy(val)
-      }
-    },
-    _legacyCopy(val) {
-      const ta = document.createElement('textarea')
-      ta.value = val
-      ta.style.position = 'fixed'
-      ta.style.opacity = '0'
-      document.body.appendChild(ta)
-      ta.focus()
-      ta.select()
-      try { document.execCommand('copy'); this.$message.success(this.$t('actions.copied')) } catch (e) { this.$message.error('复制失败') }
-      document.body.removeChild(ta)
-    },
     onViewTrace() {
       if (!this.successInfo.code) return
       this.successDialogVisible = false
@@ -1199,7 +1170,17 @@ export default {
     onViewTx() {
       if (!this.canOpenTx) return
       const url = this.txExplorer.replace(/\/$/, '') + '/' + this.successInfo.txid
-      window.open(url, '_blank')
+      try {
+        const a = document.createElement('a')
+        a.href = url
+        a.target = '_blank'
+        a.rel = 'noopener noreferrer'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+      } catch (e) {
+        window.open(url, '_blank', 'noopener,noreferrer')
+      }
     },
     onContinueInput() {
       this.successDialogVisible = false
@@ -1231,6 +1212,59 @@ export default {
           this.tracedata.Factory_input = { Fac_productName: '', Fac_productionbatch: '', Fac_productionTime: null, Fac_factoryName: '', Fac_contactNumber: '' }
         }
       }
+    },
+    openDownload(url, name) {
+      try {
+        const a = document.createElement('a')
+        a.href = url
+        a.download = name || 'image'
+        a.rel = 'noopener noreferrer'
+        a.target = '_blank'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+      } catch (e) {
+        window.open(url, '_blank')
+      }
+    },
+    normalizeIncoming(data) {
+      // 将后端返回的对象整形为视图使用的字段结构
+      const n = normalizeRow(data)
+      this.applyNormalized(n)
+    },
+    applyNormalized(n) {
+      // 仅将同名字段回填到表单 tracedata，避免覆盖用户未填写的项
+      if (!n || typeof n !== 'object') return
+      const td = this.tracedata
+      td.traceability_code = n.traceability_code || td.traceability_code
+      const f = n.farmer_input || {}
+      const fac = n.factory_input || {}
+      const d = n.driver_input || {}
+      const s = n.shop_input || {}
+      // 农户
+      td.Farmer_input.Fa_fruitName = f.fa_fruitName || td.Farmer_input.Fa_fruitName
+      td.Farmer_input.Fa_origin = f.fa_origin || td.Farmer_input.Fa_origin
+      td.Farmer_input.Fa_plantTime = f.fa_plantTime || td.Farmer_input.Fa_plantTime
+      td.Farmer_input.Fa_pickingTime = f.fa_pickingTime || td.Farmer_input.Fa_pickingTime
+      td.Farmer_input.Fa_farmerName = f.fa_farmerName || td.Farmer_input.Fa_farmerName
+      // 制造商
+      td.Factory_input.Fac_productName = fac.fac_productName || td.Factory_input.Fac_productName
+      td.Factory_input.Fac_productionbatch = fac.fac_productionbatch || td.Factory_input.Fac_productionbatch
+      td.Factory_input.Fac_productionTime = fac.fac_productionTime || td.Factory_input.Fac_productionTime
+      td.Factory_input.Fac_factoryName = fac.fac_factoryName || td.Factory_input.Fac_factoryName
+      td.Factory_input.Fac_contactNumber = fac.fac_contactNumber || td.Factory_input.Fac_contactNumber
+      // 司机
+      td.Driver_input.Dr_name = d.dr_name || td.Driver_input.Dr_name
+      td.Driver_input.Dr_age = d.dr_age || td.Driver_input.Dr_age
+      td.Driver_input.Dr_phone = d.dr_phone || td.Driver_input.Dr_phone
+      td.Driver_input.Dr_carNumber = d.dr_carNumber || td.Driver_input.Dr_carNumber
+      td.Driver_input.Dr_transport = d.dr_transport || td.Driver_input.Dr_transport
+      // 经销商
+      td.Shop_input.Sh_storeTime = s.sh_storeTime || td.Shop_input.Sh_storeTime
+      td.Shop_input.Sh_sellTime = s.sh_sellTime || td.Shop_input.Sh_sellTime
+      td.Shop_input.Sh_shopName = s.sh_shopName || td.Shop_input.Sh_shopName
+      td.Shop_input.Sh_shopAddress = s.sh_shopAddress || td.Shop_input.Sh_shopAddress
+      td.Shop_input.Sh_shopPhone = s.sh_shopPhone || td.Shop_input.Sh_shopPhone
     }
   }
 }
@@ -1258,6 +1292,8 @@ export default {
   font-size: 14px;
 }
 .form-help { color: #909399; font-size: 12px; margin-top: 4px; }
+.image-preview-row { margin-top: 10px; display: flex; align-items: center; gap: 8px; }
+.img-preview { max-width: 100%; max-height: 150px; border: 1px solid #dcdfe6; }
 @media (max-width: 767px) {
   .form-footer {
     text-align: center;

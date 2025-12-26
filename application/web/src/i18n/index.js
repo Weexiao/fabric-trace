@@ -9,7 +9,8 @@ const messages = {
       title: '价值网溯源系统'
     },
     nav: {
-      logout: '登出'
+      logout: '登出',
+      userAvatar: '用户头像'
     },
     common: {
       currentUser: '当前用户',
@@ -120,12 +121,19 @@ const messages = {
         passwordMin: '密码至少6个字符',
         passwordComplex: '密码需包含字母和数字',
         passwordAgainRequired: '请再次输入密码',
-        passwordNotEqual: '两次密码不一致'
+        passwordNotEqual: '两次密码不一致',
+        usernamePattern: '仅限字母/数字/下划线'
       },
       messages: {
         loginFailed: '登录失败',
         registerFailed: '注册失败',
         registering: '注册中...'
+      },
+      roles: {
+        farmer: '原料供应商',
+        factory: '制造商',
+        driver: '物流承运商',
+        dealer: '经销商'
       }
     },
     build: {
@@ -149,6 +157,64 @@ const messages = {
       howToDelete: '如何删除此页面？',
       submitFailed: '提交失败，请重试！',
       buildFailed: '构建失败：{msg}'
+    },
+    trace: {
+      getAll: '获取所有产品信息',
+      recentQueries: '最近查询',
+      clearHistory: '清空历史',
+      requestError: '请求出错',
+      empty: '暂无数据',
+      sections: {
+        farmer: '原料信息',
+        factory: '制造商信息',
+        driver: '物流承运商信息',
+        shop: '经销商信息'
+      },
+      relatedImage: '相关图片（点击下载）',
+      image: {
+        loading: '加载中',
+        error: '加载失败'
+      },
+      alt: {
+        farmerImage: '原料图片',
+        factoryImage: '制造商图片',
+        driverImage: '物流图片',
+        shopImage: '经销商图片'
+      },
+      txid: '区块链交易ID',
+      txTime: '区块链交易时间',
+      tag: {
+        rawMaterial: '原料',
+        manufacturer: '制造商',
+        logistics: '物流',
+        dealer: '经销商'
+      }
+    },
+    error: {
+      fetchTraceFailed: '查询接口请求失败，请稍后重试'
+    },
+    page404: {
+      oops: '出错了！',
+      rights: '版权所有',
+      checkUrl: '请检查您输入的链接是否正确，或点击下方按钮返回首页。',
+      backHome: '返回首页',
+      message: '站长说你不能进入这个页面...'
+    },
+    table: {
+      loading: '加载中',
+      id: '编号',
+      title: '标题',
+      author: '作者',
+      pageviews: '阅读量',
+      status: '状态',
+      displayTime: '展示时间',
+      fetchFailed: '获取列表失败，请稍后重试'
+    },
+    tree: {
+      filterPlaceholder: '输入关键字筛选',
+      level1: '一级 {n}',
+      level2: '二级 {a}-{b}',
+      level3: '三级 {a}-{b}-{c}'
     }
   },
   en: {
@@ -156,7 +222,8 @@ const messages = {
       title: 'Value Network Traceability System'
     },
     nav: {
-      logout: 'Logout'
+      logout: 'Logout',
+      userAvatar: 'User avatar'
     },
     common: {
       currentUser: 'Current user',
@@ -267,12 +334,19 @@ const messages = {
         passwordMin: 'At least 6 characters',
         passwordComplex: 'Password must include letters and numbers',
         passwordAgainRequired: 'Please re-enter password',
-        passwordNotEqual: 'Passwords do not match'
+        passwordNotEqual: 'Passwords do not match',
+        usernamePattern: 'Letters, numbers, and underscore only'
       },
       messages: {
         loginFailed: 'Login failed',
         registerFailed: 'Registration failed',
         registering: 'Registering...'
+      },
+      roles: {
+        farmer: 'Supplier',
+        factory: 'Manufacturer',
+        driver: 'Carrier',
+        dealer: 'Dealer'
       }
     },
     build: {
@@ -296,6 +370,64 @@ const messages = {
       howToDelete: 'How to delete this page?',
       submitFailed: 'Submit failed, please retry!',
       buildFailed: 'Build failed: {msg}'
+    },
+    trace: {
+      getAll: 'Get all products',
+      recentQueries: 'Recent queries',
+      clearHistory: 'Clear history',
+      requestError: 'Request Error',
+      empty: 'No data',
+      sections: {
+        farmer: 'Ingredient Info',
+        factory: 'Manufacturer Info',
+        driver: 'Carrier Info',
+        shop: 'Dealer Info'
+      },
+      relatedImage: 'Related Image (click to download)',
+      image: {
+        loading: 'Loading',
+        error: 'Load Failed'
+      },
+      alt: {
+        farmerImage: 'Ingredient Image',
+        factoryImage: 'Manufacturer Image',
+        driverImage: 'Logistics Image',
+        shopImage: 'Dealer Image'
+      },
+      txid: 'Blockchain TxID',
+      txTime: 'Blockchain Tx Time',
+      tag: {
+        rawMaterial: 'Raw Material',
+        manufacturer: 'Manufacturer',
+        logistics: 'Logistics',
+        dealer: 'Dealer'
+      }
+    },
+    error: {
+      fetchTraceFailed: 'Trace API request failed, please try again later'
+    },
+    page404: {
+      oops: 'OOPS!',
+      rights: 'All rights reserved',
+      checkUrl: 'Please check the URL or click the button below to return to the homepage.',
+      backHome: 'Back to home',
+      message: 'The webmaster said that you can not enter this page...'
+    },
+    table: {
+      loading: 'Loading',
+      id: 'ID',
+      title: 'Title',
+      author: 'Author',
+      pageviews: 'Pageviews',
+      status: 'Status',
+      displayTime: 'Display Time',
+      fetchFailed: 'Failed to fetch list, please try later'
+    },
+    tree: {
+      filterPlaceholder: 'Filter keyword',
+      level1: 'Level one {n}',
+      level2: 'Level two {a}-{b}',
+      level3: 'Level three {a}-{b}-{c}'
     }
   }
 }

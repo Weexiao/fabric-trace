@@ -115,3 +115,28 @@ export function param2Obj(url) {
   })
   return obj
 }
+
+/**
+ * Safely get deep property by dot path. Returns defVal when missing/null.
+ * @param {object} obj
+ * @param {string} path dot-separated keys, e.g. "a.b.c"
+ * @param {*} defVal default value when missing
+ * @returns {*}
+ */
+export function safeGet(obj, path, defVal = '') {
+  try {
+    if (!obj || !path) return defVal
+    const keys = String(path).split('.')
+    let cur = obj
+    for (const k of keys) {
+      if (cur && Object.prototype.hasOwnProperty.call(cur, k)) {
+        cur = cur[k]
+      } else {
+        return defVal
+      }
+    }
+    return cur == null ? defVal : cur
+  } catch (e) {
+    return defVal
+  }
+}

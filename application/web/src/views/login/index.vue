@@ -159,7 +159,7 @@ export default {
         username: [
           { required: true, message: this.$t('login.rules.usernameRequired'), trigger: 'blur' },
           { type: 'string', min: 3, message: this.$t('login.rules.usernameMin'), trigger: 'blur' },
-          { pattern: usernamePattern, message: '仅限字母/数字/下划线', trigger: 'blur' }
+          { pattern: usernamePattern, message: this.$t('login.rules.usernamePattern'), trigger: 'blur' }
         ],
         password: [
           { validator: validatePasswordComplex, trigger: 'blur' }
@@ -188,19 +188,16 @@ export default {
       },
       options: [{
         value: '原料供应商',
-        label: '原料供应商'
+        label: this.$t('login.roles.farmer')
       }, {
         value: '制造商',
-        label: '制造商'
+        label: this.$t('login.roles.factory')
       }, {
         value: '物流承运商',
-        label: '物流承运商'
+        label: this.$t('login.roles.driver')
       }, {
         value: '经销商',
-        label: '经销商'
-      }, {
-        value: '零售商',
-        label: '零售商'
+        label: this.$t('login.roles.dealer')
       }],
       LENGTHS: Object.assign({ login: { username: 50, password: 100 }}, LENGTHS)
     }

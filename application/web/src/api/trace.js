@@ -11,13 +11,13 @@ export function uplink(data) {
   })
 }
 
-// getFruitInfo
+// getFruitInfo 使用 JSON
 export function getFruitInfo(data) {
   return request({
     url: '/getFruitInfo',
     method: 'post',
     headers: {
-      'Content-Type': 'multipart/form-data'
+      'Content-Type': 'application/json'
     },
     data
   })
@@ -35,15 +35,17 @@ export function getFruitList(data) {
   })
 }
 
-// getAllFruitInfo
+// 服务端分页的“获取所有产品信息”
+// 约定 data: { page: number, pageSize: number }
 export function getAllFruitInfo(data) {
+  const payload = data && typeof data === 'object' ? data : {}
   return request({
     url: '/getAllFruitInfo',
     method: 'post',
     headers: {
-      'Content-Type': 'multipart/form-data'
+      'Content-Type': 'application/json'
     },
-    data
+    data: payload
   })
 }
 
@@ -58,4 +60,3 @@ export function getFruitHistory(data) {
     data
   })
 }
-

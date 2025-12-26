@@ -1,42 +1,41 @@
 <template>
   <div class="app-container">
     <el-table
-      v-loading="listLoading"
       :data="list"
-      element-loading-text="Loading"
+      :element-loading-text="$t('table.loading')"
       border
       fit
       highlight-current-row
     >
-      <el-table-column align="center" label="ID" width="95">
-        <template slot-scope="scope">
+      <el-table-column align="center" :label="$t('table.id')" width="95">
+        <template v-slot="scope">
           {{ scope.$index }}
         </template>
       </el-table-column>
-      <el-table-column label="Title">
-        <template slot-scope="scope">
-          {{ scope.row.title }}
+      <el-table-column :label="$t('table.title')">
+        <template v-slot="scope">
+          {{ safeGet(scope.row, 'title', '') }}
         </template>
       </el-table-column>
-      <el-table-column label="Author" width="110" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.author }}</span>
+      <el-table-column :label="$t('table.author')" width="110" align="center">
+        <template v-slot="scope">
+          <span>{{ safeGet(scope.row, 'author', '') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Pageviews" width="110" align="center">
-        <template slot-scope="scope">
-          {{ scope.row.pageviews }}
+      <el-table-column :label="$t('table.pageviews')" width="110" align="center">
+        <template v-slot="scope">
+          {{ safeGet(scope.row, 'pageviews', 0) }}
         </template>
       </el-table-column>
-      <el-table-column class-name="status-col" label="Status" width="110" align="center">
-        <template slot-scope="scope">
-          <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status }}</el-tag>
+      <el-table-column class-name="status-col" :label="$t('table.status')" width="110" align="center">
+        <template v-slot="scope">
+          <el-tag :type="(safeGet(scope.row, 'status', '') | statusFilter)">{{ safeGet(scope.row, 'status', '') }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column align="center" prop="created_at" label="Display_time" width="200">
-        <template slot-scope="scope">
+      <el-table-column align="center" prop="created_at" :label="$t('table.displayTime')" width="200">
+        <template v-slot="scope">
           <i class="el-icon-time" />
-          <span>{{ scope.row.display_time }}</span>
+          <span>{{ safeGet(scope.row, 'display_time', '') }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -45,6 +44,8 @@
 
 <script>
 import { getList } from '@/api/table'
+import { safeGet as safeGetUtil } from '@/utils'
+import { apiWrap } from '@/utils/error'
 
 export default {
   filters: {
@@ -59,20 +60,20 @@ export default {
   },
   data() {
     return {
-      list: null,
-      listLoading: true
+      list: [],
+      listLoading: false,
+      errorMessage: null
     }
   },
   created() {
     this.fetchData()
   },
   methods: {
+    safeGet: safeGetUtil,
     fetchData() {
-      this.listLoading = true
-      getList().then(response => {
-        this.list = response.data.items
-        this.listLoading = false
-      })
+      apiWrap(this, () => getList(), (res) => {
+        this.list = this.safeGet(res, 'data.items', [])
+      }, this.$t('table.fetchFailed'))
     }
   }
 }

@@ -6,22 +6,12 @@
     <div class="right-menu">
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
-          <img src="https://foruda.gitee.com/avatar/1708144926151716189/4941425_real__cool_1708144926.png!avatar200" class="user-avatar">
+          <img src="https://foruda.gitee.com/avatar/1708144926151716189/4941425_real__cool_1708144926.png!avatar200" class="user-avatar" :alt="$t('nav.userAvatar')">
           <i class="el-icon-caret-bottom" />
         </div>
-        <el-dropdown-menu slot="dropdown" class="user-dropdown">
-<!--          <a target="_blank" href="https://gitee.com/real__cool/fabric-trace">-->
-<!--            <el-dropdown-item>项目地址</el-dropdown-item>-->
-<!--          </a>-->
-<!--          <a target="_blank" href="https://blog.csdn.net/qq_41575489">-->
-<!--            <el-dropdown-item>TrueTechLabs 博客</el-dropdown-item>-->
-<!--          </a>-->
-<!--          <a target="_blank" href="https://space.bilibili.com/25095014">-->
-<!--            <el-dropdown-item>TrueTechLabs B站</el-dropdown-item>-->
-<!--          </a>-->
-<!--          <el-dropdown-item divided @click.native="logout">-->
+        <el-dropdown-menu v-slot:default class="user-dropdown">
           <el-dropdown-item @click.native="logout">
-            <span style="display:block;">登出</span>
+            <span style="display:block;">{{ $t('nav.logout') }}</span>
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
@@ -45,8 +35,7 @@ export default {
       return logo
     },
     ...mapGetters([
-      'sidebar',
-      'avatar'
+      'sidebar'
     ])
   },
   methods: {
