@@ -50,32 +50,32 @@
                   <template v-slot:title>
                     <i class="el-icon-apple" aria-hidden="true" />
                     <span class="section-title">{{ $t('trace.sections.farmer') }}</span>
-                    <el-tag size="mini" type="success" aria-label="{{ $t('trace.tag.rawMaterial') }}">{{ $t('trace.tag.rawMaterial') }}</el-tag>
+                    <el-tag size="mini" type="success" :aria-label="$t('trace.tag.rawMaterial')">{{ $t('trace.tag.rawMaterial') }}</el-tag>
                   </template>
                   <el-form label-position="left" inline class="demo-table-expand">
                     <el-form-item :label="($t('form.farmer.fruitName') || '原料名称') + ':'">
-                      <span>{{ normalizeDisplay(safeGet(props.row, 'farmer_input.fa_fruitName', ''), { max: 100 }) }}</span>
+                      <span>{{ normalizeDisplay(safeGet(props.row, 'rawSupplierInput.productName', ''), { max: 100 }) }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.farmer.origin') || '原料产地') + ':'">
-                      <span>{{ normalizeDisplay(safeGet(props.row, 'farmer_input.fa_origin', ''), { max: 100 }) }}</span>
+                      <span>{{ normalizeDisplay(safeGet(props.row, 'rawSupplierInput.rawOrigin', ''), { max: 100 }) }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.farmer.plantTime') || '原料生产时间') + ':'">
-                      <span>{{ formatDateTime(safeGet(props.row, 'farmer_input.fa_plantTime', '')) }}</span>
+                      <span>{{ formatDateTime(safeGet(props.row, 'rawSupplierInput.arrivalTime', '')) }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.farmer.pickTime') || '原料到货时间') + ':'">
-                      <span>{{ formatDateTime(safeGet(props.row, 'farmer_input.fa_pickingTime', '')) }}</span>
+                      <span>{{ formatDateTime(safeGet(props.row, 'rawSupplierInput.productionTime', '')) }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.farmer.supplier') || '原料供应商名称') + ':'">
-                      <span>{{ normalizeDisplay(safeGet(props.row, 'farmer_input.fa_farmerName', ''), { max: 100 }) }}</span>
+                      <span>{{ normalizeDisplay(safeGet(props.row, 'rawSupplierInput.supplierName', ''), { max: 100 }) }}</span>
                     </el-form-item>
-                    <el-form-item v-if="safeGet(props.row, 'farmer_input.fa_img', '')" :label="($t('trace.relatedImage') || '相关图片（点击下载）') + ':'" class="image-item">
-                      <a :href="imgHref(props.row, 'farmer_input.fa_img')" target="_blank" rel="noopener noreferrer" :download="safeGet(props.row, 'farmer_input.fa_fruitName', 'image')">
+                    <el-form-item v-if="safeGet(props.row, 'rawSupplierInput.img', '')" :label="($t('trace.relatedImage') || '相关图片（点击下载）') + ':'" class="image-item">
+                      <a :href="imgHref(props.row, 'rawSupplierInput.img')" target="_blank" rel="noopener noreferrer" :download="safeGet(props.row, 'rawSupplierInput.productName', 'image')">
                         <el-image
                           style="width: 100px; height: 100px;"
-                          :src="imgSrc(props.row, 'farmer_input.fa_img')"
-                          :preview-src-list="imgPreviewList(props.row, 'farmer_input.fa_img')"
-                          :alt="`${safeGet(props.row, 'farmer_input.fa_fruitName', $t('trace.alt.farmerImage') || '原料图片')}`"
-                          :title="`${safeGet(props.row, 'farmer_input.fa_fruitName', $t('trace.alt.farmerImage') || '原料图片')}`"
+                          :src="imgSrc(props.row, 'rawSupplierInput.img')"
+                          :preview-src-list="imgPreviewList(props.row, 'rawSupplierInput.img')"
+                          :alt="`${safeGet(props.row, 'rawSupplierInput.productName', $t('trace.alt.farmerImage') || '原料图片')}`"
+                          :title="`${safeGet(props.row, 'rawSupplierInput.productName', $t('trace.alt.farmerImage') || '原料图片')}`"
                           fit="cover"
                           lazy
                         >
@@ -87,13 +87,13 @@
                           </div>
                         </el-image>
                       </a>
-                      <el-button type="text" icon="el-icon-download" :href="imgHref(props.row, 'farmer_input.fa_img')" aria-label="{{ $t('actions.download') }}" @click.prevent="openDownload(imgHref(props.row, 'farmer_input.fa_img'), safeGet(props.row, 'farmer_input.fa_fruitName', 'image'))">{{ $t('actions.download') || '下载' }}</el-button>
+                      <el-button type="text" icon="el-icon-download" :href="imgHref(props.row, 'rawSupplierInput.img')" :aria-label="$t('actions.download')" @click.prevent="openDownload(imgHref(props.row, 'rawSupplierInput.img'), safeGet(props.row, 'rawSupplierInput.productName', 'image'))">{{ $t('actions.download') || '下载' }}</el-button>
                     </el-form-item>
                     <el-form-item :label="($t('trace.txid') || '区块链交易ID') + ':'">
-                      <span>{{ safeGet(props.row, 'farmer_input.fa_txid', '') }}</span>
+                      <span>{{ safeGet(props.row, 'rawSupplierInput.txid', '') }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('trace.txTime') || '区块链交易时间') + ':'">
-                      <span>{{ formatDateTime(safeGet(props.row, 'farmer_input.fa_timestamp', '')) }}</span>
+                      <span>{{ formatDateTime(safeGet(props.row, 'rawSupplierInput.timestamp', '')) }}</span>
                     </el-form-item>
                   </el-form>
                 </el-collapse-item>
@@ -101,32 +101,32 @@
                   <template v-slot:title>
                     <i class="el-icon-office-building" aria-hidden="true" />
                     <span class="section-title">{{ $t('trace.sections.factory') }}</span>
-                    <el-tag size="mini" type="info" aria-label="{{ $t('trace.tag.manufacturer') }}">{{ $t('trace.tag.manufacturer') }}</el-tag>
+                    <el-tag size="mini" type="info" :aria-label="$t('trace.tag.manufacturer')">{{ $t('trace.tag.manufacturer') }}</el-tag>
                   </template>
                   <el-form label-position="left" inline class="demo-table-expand">
                     <el-form-item :label="($t('form.factory.productName') || '产品名称') + ':'">
-                      <span>{{ normalizeDisplay(safeGet(props.row, 'factory_input.fac_productName', ''), { max: 100 }) }}</span>
+                      <span>{{ normalizeDisplay(safeGet(props.row, 'manufacturerInput.productName', ''), { max: 100 }) }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.factory.batch') || '生产批次') + ':'">
-                      <span>{{ safeGet(props.row, 'factory_input.fac_productionbatch', '') }}</span>
+                      <span>{{ safeGet(props.row, 'manufacturerInput.productionBatch', '') }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.factory.prodTime') || '生产时间') + ':'">
-                      <span>{{ formatDateTime(safeGet(props.row, 'factory_input.fac_productionTime', '')) }}</span>
+                      <span>{{ formatDateTime(safeGet(props.row, 'manufacturerInput.factoryTime', '')) }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.factory.factoryName') || '制造商名称') + ':'">
-                      <span>{{ normalizeDisplay(safeGet(props.row, 'factory_input.fac_factoryName', ''), { max: 100 }) }}</span>
+                      <span>{{ normalizeDisplay(safeGet(props.row, 'manufacturerInput.factoryNameAddress', ''), { max: 100 }) }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.factory.phone') || '制造商电话') + ':'">
-                      <span>{{ safeGet(props.row, 'factory_input.fac_contactNumber', '') }}</span>
+                      <span>{{ safeGet(props.row, 'manufacturerInput.contactPhone', '') }}</span>
                     </el-form-item>
-                    <el-form-item v-if="safeGet(props.row, 'factory_input.fac_img', '')" :label="($t('trace.relatedImage') || '相关图片（点击下载）') + ':'" class="image-item">
-                      <a :href="imgHref(props.row, 'factory_input.fac_img')" target="_blank" rel="noopener noreferrer" :download="safeGet(props.row, 'factory_input.fac_productName', 'image')">
+                    <el-form-item v-if="safeGet(props.row, 'manufacturerInput.img', '')" :label="($t('trace.relatedImage') || '相关图片（点击下载）') + ':'" class="image-item">
+                      <a :href="imgHref(props.row, 'manufacturerInput.img')" target="_blank" rel="noopener noreferrer" :download="safeGet(props.row, 'manufacturerInput.productName', 'image')">
                         <el-image
                           style="width: 100px; height: 100px;"
-                          :src="imgSrc(props.row, 'factory_input.fac_img')"
-                          :preview-src-list="imgPreviewList(props.row, 'factory_input.fac_img')"
-                          :alt="`${safeGet(props.row, 'factory_input.fac_productName', $t('trace.alt.factoryImage') || '制造商图片')}`"
-                          :title="`${safeGet(props.row, 'factory_input.fac_productName', $t('trace.alt.factoryImage') || '制造商图片')}`"
+                          :src="imgSrc(props.row, 'manufacturerInput.img')"
+                          :preview-src-list="imgPreviewList(props.row, 'manufacturerInput.img')"
+                          :alt="`${safeGet(props.row, 'manufacturerInput.productName', $t('trace.alt.factoryImage') || '制造商图片')}`"
+                          :title="`${safeGet(props.row, 'manufacturerInput.productName', $t('trace.alt.factoryImage') || '制造商图片')}`"
                           fit="cover"
                           lazy
                         >
@@ -138,13 +138,13 @@
                           </div>
                         </el-image>
                       </a>
-                      <el-button type="text" icon="el-icon-download" :href="imgHref(props.row, 'factory_input.fac_img')" aria-label="{{ $t('actions.download') }}" @click.prevent="openDownload(imgHref(props.row, 'factory_input.fac_img'), safeGet(props.row, 'factory_input.fac_productName', 'image'))">{{ $t('actions.download') || '下载' }}</el-button>
+                      <el-button type="text" icon="el-icon-download" :href="imgHref(props.row, 'manufacturerInput.img')" :aria-label="$t('actions.download')" @click.prevent="openDownload(imgHref(props.row, 'manufacturerInput.img'), safeGet(props.row, 'manufacturerInput.productName', 'image'))">{{ $t('actions.download') || '下载' }}</el-button>
                     </el-form-item>
                     <el-form-item :label="($t('trace.txid') || '区块链交易ID') + ':'">
-                      <span>{{ safeGet(props.row, 'factory_input.fac_txid', '') }}</span>
+                      <span>{{ safeGet(props.row, 'manufacturerInput.txid', '') }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('trace.txTime') || '区块链交易时间') + ':'">
-                      <span>{{ formatDateTime(safeGet(props.row, 'factory_input.fac_timestamp', '')) }}</span>
+                      <span>{{ formatDateTime(safeGet(props.row, 'manufacturerInput.timestamp', '')) }}</span>
                     </el-form-item>
                   </el-form>
                 </el-collapse-item>
@@ -152,32 +152,32 @@
                   <template v-slot:title>
                     <i class="el-icon-truck" aria-hidden="true" />
                     <span class="section-title">{{ $t('trace.sections.driver') }}</span>
-                    <el-tag size="mini" type="warning" aria-label="{{ $t('trace.tag.logistics') }}">{{ $t('trace.tag.logistics') }}</el-tag>
+                    <el-tag size="mini" type="warning" :aria-label="$t('trace.tag.logistics')">{{ $t('trace.tag.logistics') }}</el-tag>
                   </template>
                   <el-form label-position="left" inline class="demo-table-expand">
                     <el-form-item :label="($t('form.driver.name') || '运输司机姓名') + ':'">
-                      <span>{{ normalizeDisplay(safeGet(props.row, 'driver_input.dr_name', ''), { max: 100 }) }}</span>
+                      <span>{{ normalizeDisplay(safeGet(props.row, 'carrierInput.name', ''), { max: 100 }) }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.driver.age') || '运输司机年龄') + ':'">
-                      <span>{{ safeGet(props.row, 'driver_input.dr_age', '') }}</span>
+                      <span>{{ safeGet(props.row, 'carrierInput.age', '') }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.driver.phone') || '运输司机联系电话') + ':'">
-                      <span>{{ safeGet(props.row, 'driver_input.dr_phone', '') }}</span>
+                      <span>{{ safeGet(props.row, 'carrierInput.phone', '') }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.driver.carNumber') || '车牌号') + ':'">
-                      <span>{{ safeGet(props.row, 'driver_input.dr_carNumber', '') }}</span>
+                      <span>{{ safeGet(props.row, 'carrierInput.plateNumber', '') }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.driver.transport') || '运输记录') + ':'">
-                      <span>{{ normalizeDisplay(safeGet(props.row, 'driver_input.dr_transport', ''), { max: 200 }) }}</span>
+                      <span>{{ normalizeDisplay(safeGet(props.row, 'carrierInput.transportRecord', ''), { max: 200 }) }}</span>
                     </el-form-item>
-                    <el-form-item v-if="safeGet(props.row, 'driver_input.dr_img', '')" :label="($t('trace.relatedImage') || '相关图片（点击下载）') + ':'" class="image-item">
-                      <a :href="imgHref(props.row, 'driver_input.dr_img')" target="_blank" rel="noopener noreferrer" :download="safeGet(props.row, 'driver_input.dr_name', 'image')">
+                    <el-form-item v-if="safeGet(props.row, 'carrierInput.img', '')" :label="($t('trace.relatedImage') || '相关图片（点击下载）') + ':'" class="image-item">
+                      <a :href="imgHref(props.row, 'carrierInput.img')" target="_blank" rel="noopener noreferrer" :download="safeGet(props.row, 'carrierInput.name', 'image')">
                         <el-image
                           style="width: 100px; height: 100px;"
-                          :src="imgSrc(props.row, 'driver_input.dr_img')"
-                          :preview-src-list="imgPreviewList(props.row, 'driver_input.dr_img')"
-                          :alt="`${safeGet(props.row, 'driver_input.dr_name', $t('trace.alt.driverImage') || '物流图片')}`"
-                          :title="`${safeGet(props.row, 'driver_input.dr_name', $t('trace.alt.driverImage') || '物流图片')}`"
+                          :src="imgSrc(props.row, 'carrierInput.img')"
+                          :preview-src-list="imgPreviewList(props.row, 'carrierInput.img')"
+                          :alt="`${safeGet(props.row, 'carrierInput.name', $t('trace.alt.driverImage') || '物流图片')}`"
+                          :title="`${safeGet(props.row, 'carrierInput.name', $t('trace.alt.driverImage') || '物流图片')}`"
                           fit="cover"
                           lazy
                         >
@@ -189,13 +189,13 @@
                           </div>
                         </el-image>
                       </a>
-                      <el-button type="text" icon="el-icon-download" :href="imgHref(props.row, 'driver_input.dr_img')" aria-label="{{ $t('actions.download') }}" @click.prevent="openDownload(imgHref(props.row, 'driver_input.dr_img'), safeGet(props.row, 'driver_input.dr_name', 'image'))">{{ $t('actions.download') || '下载' }}</el-button>
+                      <el-button type="text" icon="el-icon-download" :href="imgHref(props.row, 'carrierInput.img')" :aria-label="$t('actions.download')" @click.prevent="openDownload(imgHref(props.row, 'carrierInput.img'), safeGet(props.row, 'carrierInput.name', 'image'))">{{ $t('actions.download') || '下载' }}</el-button>
                     </el-form-item>
                     <el-form-item :label="($t('trace.txid') || '区块链交易ID') + ':'">
-                      <span>{{ safeGet(props.row, 'driver_input.dr_txid', '') }}</span>
+                      <span>{{ safeGet(props.row, 'carrierInput.txid', '') }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('trace.txTime') || '区块链交易时间') + ':'">
-                      <span>{{ formatDateTime(safeGet(props.row, 'driver_input.dr_timestamp', '')) }}</span>
+                      <span>{{ formatDateTime(safeGet(props.row, 'carrierInput.timestamp', '')) }}</span>
                     </el-form-item>
                   </el-form>
                 </el-collapse-item>
@@ -203,32 +203,32 @@
                   <template v-slot:title>
                     <i class="el-icon-shopping-cart-full" aria-hidden="true" />
                     <span class="section-title">{{ $t('trace.sections.shop') }}</span>
-                    <el-tag size="mini" type="primary" aria-label="{{ $t('trace.tag.dealer') }}">{{ $t('trace.tag.dealer') }}</el-tag>
+                    <el-tag size="mini" type="primary" :aria-label="$t('trace.tag.dealer')">{{ $t('trace.tag.dealer') }}</el-tag>
                   </template>
                   <el-form label-position="left" inline class="demo-table-expand">
                     <el-form-item :label="($t('form.shop.storeTime') || '入库时间') + ':'">
-                      <span>{{ formatDateTime(safeGet(props.row, 'shop_input.sh_storeTime', '')) }}</span>
+                      <span>{{ formatDateTime(safeGet(props.row, 'dealerInput.storeTime', '')) }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.shop.sellTime') || '销售时间') + ':'">
-                      <span>{{ formatDateTime(safeGet(props.row, 'shop_input.sh_sellTime', '')) }}</span>
+                      <span>{{ formatDateTime(safeGet(props.row, 'dealerInput.sellTime', '')) }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.shop.name') || '经销商名称') + ':'">
-                      <span>{{ normalizeDisplay(safeGet(props.row, 'shop_input.sh_shopName', ''), { max: 100 }) }}</span>
+                      <span>{{ normalizeDisplay(safeGet(props.row, 'dealerInput.dealerName', ''), { max: 100 }) }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.shop.address') || '经销商地址') + ':'">
-                      <span>{{ normalizeDisplay(safeGet(props.row, 'shop_input.sh_shopAddress', ''), { max: 200 }) }}</span>
+                      <span>{{ normalizeDisplay(safeGet(props.row, 'dealerInput.dealerLocation', ''), { max: 200 }) }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('form.shop.phone') || '经销商电话') + ':'">
-                      <span>{{ normalizeDisplay(safeGet(props.row, 'shop_input.sh_shopPhone', ''), { max: 30 }) }}</span>
+                      <span>{{ normalizeDisplay(safeGet(props.row, 'dealerInput.dealerPhone', ''), { max: 30 }) }}</span>
                     </el-form-item>
-                    <el-form-item v-if="safeGet(props.row, 'shop_input.sh_img', '')" :label="($t('trace.relatedImage') || '相关图片（点击下载）') + ':'" class="image-item">
-                      <a :href="imgHref(props.row, 'shop_input.sh_img')" target="_blank" rel="noopener noreferrer" :download="safeGet(props.row, 'shop_input.sh_shopName', 'image')">
+                    <el-form-item v-if="safeGet(props.row, 'dealerInput.img', '')" :label="($t('trace.relatedImage') || '相关图片（点击下载）') + ':'" class="image-item">
+                      <a :href="imgHref(props.row, 'dealerInput.img')" target="_blank" rel="noopener noreferrer" :download="safeGet(props.row, 'dealerInput.dealerName', 'image')">
                         <el-image
                           style="width: 100px; height: 100px;"
-                          :src="imgSrc(props.row, 'shop_input.sh_img')"
-                          :preview-src-list="imgPreviewList(props.row, 'shop_input.sh_img')"
-                          :alt="`${safeGet(props.row, 'shop_input.sh_shopName', $t('trace.alt.shopImage') || '经销商图片')}`"
-                          :title="`${safeGet(props.row, 'shop_input.sh_shopName', $t('trace.alt.shopImage') || '经销商图片')}`"
+                          :src="imgSrc(props.row, 'dealerInput.img')"
+                          :preview-src-list="imgPreviewList(props.row, 'dealerInput.img')"
+                          :alt="`${safeGet(props.row, 'dealerInput.dealerName', $t('trace.alt.shopImage') || '经销商图片')}`"
+                          :title="`${safeGet(props.row, 'dealerInput.dealerName', $t('trace.alt.shopImage') || '经销商图片')}`"
                           fit="cover"
                           lazy
                         >
@@ -240,13 +240,13 @@
                           </div>
                         </el-image>
                       </a>
-                      <el-button type="text" icon="el-icon-download" :href="imgHref(props.row, 'shop_input.sh_img')" aria-label="{{ $t('actions.download') }}" @click.prevent="openDownload(imgHref(props.row, 'shop_input.sh_img'), safeGet(props.row, 'shop_input.sh_shopName', 'image'))">{{ $t('actions.download') || '下载' }}</el-button>
+                      <el-button type="text" icon="el-icon-download" :href="imgHref(props.row, 'dealerInput.img')" :aria-label="$t('actions.download')" @click.prevent="openDownload(imgHref(props.row, 'dealerInput.img'), safeGet(props.row, 'dealerInput.dealerName', 'image'))">{{ $t('actions.download') || '下载' }}</el-button>
                     </el-form-item>
                     <el-form-item :label="($t('trace.txid') || '区块链交易ID') + ':'">
-                      <span>{{ safeGet(props.row, 'shop_input.sh_txid', '') }}</span>
+                      <span>{{ safeGet(props.row, 'dealerInput.txid', '') }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('trace.txTime') || '区块链交易时间') + ':'">
-                      <span>{{ formatDateTime(safeGet(props.row, 'shop_input.sh_timestamp', '')) }}</span>
+                      <span>{{ formatDateTime(safeGet(props.row, 'dealerInput.timestamp', '')) }}</span>
                     </el-form-item>
                   </el-form>
                 </el-collapse-item>
@@ -256,29 +256,29 @@
         </el-table-column>
         <el-table-column
           :label="$t('form.traceCode') || '溯源码'"
-          prop="traceability_code"
+          prop="traceabilityCode"
           sortable="custom"
         />
         <el-table-column
           :label="$t('form.factory.productName') || '产品名称'"
-          prop="farmer_input.fa_fruitName"
-          :formatter="(row)=>normalizeDisplay(safeGet(row, 'farmer_input.fa_fruitName', ''), { max: 100 })"
+          prop="rawSupplierInput.productName"
+          :formatter="(row)=>normalizeDisplay(safeGet(row, 'rawSupplierInput.productName', ''), { max: 100 })"
           :filters="nameFilters"
           :filter-method="filterByName"
           sortable="custom"
         />
         <el-table-column
           :label="$t('form.farmer.origin') || '产品产地'"
-          prop="farmer_input.fa_origin"
-          :formatter="(row)=>normalizeDisplay(safeGet(row, 'farmer_input.fa_origin', ''), { max: 100 })"
+          prop="rawSupplierInput.rawOrigin"
+          :formatter="(row)=>normalizeDisplay(safeGet(row, 'rawSupplierInput.rawOrigin', ''), { max: 100 })"
           :filters="originFilters"
           :filter-method="filterByOrigin"
           sortable="custom"
         />
         <el-table-column
           :label="$t('form.farmer.pickTime') || '产品生产时间'"
-          prop="farmer_input.fa_pickingTime"
-          :formatter="(row)=>formatDateTime(safeGet(row, 'farmer_input.fa_pickingTime', ''))"
+          prop="rawSupplierInput.productionTime"
+          :formatter="(row)=>formatDateTime(safeGet(row, 'rawSupplierInput.productionTime', ''))"
           sortable="custom"
         />
       </el-table>
@@ -299,11 +299,11 @@
 </template>
 
 <script>
-import { getFruitInfo, getFruitList, getAllFruitInfo } from '@/api/trace'
+import { getIndustrialProductInfo, getIndustrialProductList, getAllIndustrialProductInfo } from '@/api/trace'
 import { sanitize } from '@/utils/sanitize'
 import { LENGTHS } from '@/utils/limits'
 import { apiWrap, retryLast } from '@/utils/error'
-import { safeGet as safeGetUtil } from '@/utils/safeGet'
+import safeGetUtil from '@/utils/safeGet'
 import { buildImgUrl } from '@/utils/url'
 import { normalizeResults, toList } from '@/utils/normalize'
 
@@ -336,7 +336,7 @@ export default {
     nameFilters() {
       const set = new Set();
       (this.tracedata || []).forEach((r) => {
-        const v = this.safeGet(r, 'farmer_input.fa_fruitName', '')
+        const v = this.safeGet(r, 'rawSupplierInput.productName', '')
         if (v) set.add(v)
       })
       return Array.from(set).slice(0, 20).map(v => ({ text: v, value: v }))
@@ -344,19 +344,18 @@ export default {
     originFilters() {
       const set = new Set();
       (this.tracedata || []).forEach((r) => {
-        const v = this.safeGet(r, 'farmer_input.fa_origin', '')
+        const v = this.safeGet(r, 'rawSupplierInput.rawOrigin', '')
         if (v) set.add(v)
       })
       return Array.from(set).slice(0, 20).map(v => ({ text: v, value: v }))
     },
     filteredSortedData() {
       let arr = Array.isArray(this.tracedata) ? this.tracedata.slice() : []
-      // 过滤
       if (this.activeNameFilters && this.activeNameFilters.length) {
-        arr = arr.filter(r => this.activeNameFilters.includes(this.safeGet(r, 'farmer_input.fa_fruitName', '')))
+        arr = arr.filter(r => this.activeNameFilters.includes(this.safeGet(r, 'rawSupplierInput.productName', '')))
       }
       if (this.activeOriginFilters && this.activeOriginFilters.length) {
-        arr = arr.filter(r => this.activeOriginFilters.includes(this.safeGet(r, 'farmer_input.fa_origin', '')))
+        arr = arr.filter(r => this.activeOriginFilters.includes(this.safeGet(r, 'rawSupplierInput.rawOrigin', '')))
       }
       // 排序
       const prop = this.sortProp
@@ -370,7 +369,7 @@ export default {
           return ta - tb
         }
         const cmpStr = (a, b) => normalizeStr(getVal(a)).localeCompare(normalizeStr(getVal(b)))
-        const isTimeProp = prop === 'farmer_input.fa_pickingTime'
+        const isTimeProp = prop === 'rawSupplierInput.productionTime'
         const comparator = isTimeProp ? cmpDate : cmpStr
         arr.sort((a, b) => {
           const r = comparator(a, b)
@@ -401,7 +400,7 @@ export default {
       this.traceCode = code
       this.fruitInfo()
     } else {
-      apiWrap(this, () => getFruitList(), (res) => {
+      apiWrap(this, () => getIndustrialProductList(), (res) => {
         const raw = Array.isArray(res.data) ? res.data : []
         this.tracedata = normalizeResults(raw)
       }, '获取初始列表失败，请稍后重试')
@@ -467,12 +466,10 @@ export default {
       }
     },
     allFruitInfo() {
-      // 使用服务端分页
       const payload = { page: this.currentPage, pageSize: this.pageSize }
-      apiWrap(this, () => getAllFruitInfo(payload), (res) => {
+      apiWrap(this, () => getAllIndustrialProductInfo(payload), (res) => {
         const raw = Array.isArray(res.data && res.data.items) ? res.data.items : (Array.isArray(res.data) ? res.data : [])
         this.tracedata = normalizeResults(raw)
-        // 兼容返回 { total, items } 或仅数组
         this.total = typeof res.data === 'object' && res.data && typeof res.data.total === 'number' ? res.data.total : raw.length
       }, '获取所有产品信息失败，请稍后重试')
     },
@@ -482,8 +479,8 @@ export default {
         this.$message && this.$message.error(this.$t ? this.$t('validate.pleaseEnterValidTraceCode') : '请输入有效的溯源码')
         return
       }
-      const payload = { traceability_code: code }
-      apiWrap(this, () => getFruitInfo(payload), (res) => {
+      const payload = { traceabilityCode: code }
+      apiWrap(this, () => getIndustrialProductInfo(payload), (res) => {
         const item = res && res.data ? res.data : null
         this.applyNewResults(item ? toList(item) : [])
         if (item) this.saveRecent(code)
@@ -526,7 +523,7 @@ export default {
     },
     safeGet: safeGetUtil,
     rowKey(row) {
-      return row && (row.traceability_code || JSON.stringify(row))
+      return row && (row.traceabilityCode || JSON.stringify(row))
     },
     isExpanded(row) {
       const key = this.rowKey(row)
@@ -543,11 +540,11 @@ export default {
       this.sortOrder = order
     },
     filterByName(value, row) {
-      const v = this.safeGet(row, 'farmer_input.fa_fruitName', '')
+      const v = this.safeGet(row, 'rawSupplierInput.productName', '')
       return value ? v === value : true
     },
     filterByOrigin(value, row) {
-      const v = this.safeGet(row, 'farmer_input.fa_origin', '')
+      const v = this.safeGet(row, 'rawSupplierInput.rawOrigin', '')
       return value ? v === value : true
     },
     parseTimeValue(val) {
@@ -602,6 +599,12 @@ export default {
         window.open(url, '_blank', 'noopener,noreferrer')
       }
     }
+  },
+  errorCaptured(err) {
+    // 捕获渲染/子组件异常，避免白屏，直接展示错误卡片
+    this.loading = false
+    this.errorMessage = (err && err.message) ? err.message : '页面渲染异常，请稍后重试'
+    return false // 不中断默认的错误处理
   }
 }
 </script>

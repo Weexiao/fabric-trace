@@ -16,9 +16,9 @@
       >
         <el-row :gutter="16">
           <el-col v-if="showTraceCodeField" :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-            <el-form-item :label="$t('form.traceCode') + ':'" class="form-item" prop="traceability_code">
+            <el-form-item :label="$t('form.traceCode') + ':'" class="form-item" prop="traceabilityCode">
               <el-input
-                v-model.trim="tracedata.traceability_code"
+                v-model.trim="tracedata.traceabilityCode"
                 :placeholder="$t('form.inputTraceCode')"
                 clearable
                 maxlength="18"
@@ -39,14 +39,14 @@
 
           <template v-if="userType==='原料供应商'">
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.farmer.fruitName') + ':'" class="form-item" prop="Farmer_input.Fa_fruitName">
-                <el-input v-model="tracedata.Farmer_input.Fa_fruitName" clearable :placeholder="$t('form.farmer.inputFruitName')" :maxlength="LENGTHS.farmer.fruitName" show-word-limit />
+              <el-form-item :label="$t('form.farmer.fruitName') + ':'" class="form-item" prop="rawSupplierInput.productName">
+                <el-input v-model="tracedata.rawSupplierInput.productName" clearable :placeholder="$t('form.farmer.inputFruitName')" :maxlength="LENGTHS.farmer.fruitName" show-word-limit />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.farmer.origin') + ':'" class="form-item" prop="Farmer_input.Fa_originCodes">
+              <el-form-item :label="$t('form.farmer.origin') + ':'" class="form-item" prop="rawSupplierInput.rawOriginCodes">
                 <el-cascader
-                  v-model="tracedata.Farmer_input.Fa_originCodes"
+                  v-model="tracedata.rawSupplierInput.rawOriginCodes"
                   :options="regionOptions"
                   clearable
                   filterable
@@ -57,72 +57,72 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.farmer.plantTime') + ':'" class="form-item" prop="Farmer_input.Fa_plantTime">
-                <el-date-picker v-model="tracedata.Farmer_input.Fa_plantTime" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" :placeholder="$t('form.datetimePlaceholder')" style="width: 100%;" :picker-options="noFuturePickerOptions" />
+              <el-form-item :label="$t('form.farmer.plantTime') + ':'" class="form-item" prop="rawSupplierInput.arrivalTime">
+                <el-date-picker v-model="tracedata.rawSupplierInput.arrivalTime" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" :placeholder="$t('form.datetimePlaceholder')" style="width: 100%;" :picker-options="noFuturePickerOptions" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.farmer.pickTime') + ':'" class="form-item" prop="Farmer_input.Fa_pickingTime">
-                <el-date-picker v-model="tracedata.Farmer_input.Fa_pickingTime" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" :placeholder="$t('form.datetimePlaceholder')" style="width: 100%;" :picker-options="noFuturePickerOptions" />
+              <el-form-item :label="$t('form.farmer.pickTime') + ':'" class="form-item" prop="rawSupplierInput.productionTime">
+                <el-date-picker v-model="tracedata.rawSupplierInput.productionTime" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" :placeholder="$t('form.datetimePlaceholder')" style="width: 100%;" :picker-options="noFuturePickerOptions" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.farmer.supplier') + ':'" class="form-item" prop="Farmer_input.Fa_farmerName">
-                <el-input v-model="tracedata.Farmer_input.Fa_farmerName" clearable :placeholder="$t('form.farmer.inputSupplier')" :maxlength="LENGTHS.farmer.farmerName" show-word-limit />
+              <el-form-item :label="$t('form.farmer.supplier') + ':'" class="form-item" prop="rawSupplierInput.supplierName">
+                <el-input v-model="tracedata.rawSupplierInput.supplierName" clearable :placeholder="$t('form.farmer.inputSupplier')" :maxlength="LENGTHS.farmer.farmerName" show-word-limit />
               </el-form-item>
             </el-col>
           </template>
 
           <template v-if="userType==='制造商'">
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.factory.productName') + ':'" class="form-item" prop="Factory_input.Fac_productName">
-                <el-input v-model="tracedata.Factory_input.Fac_productName" clearable :placeholder="$t('form.factory.inputProductName')" :maxlength="LENGTHS.factory.productName" show-word-limit />
+              <el-form-item :label="$t('form.factory.productName') + ':'" class="form-item" prop="manufacturerInput.productName">
+                <el-input v-model="tracedata.manufacturerInput.productName" clearable :placeholder="$t('form.factory.inputProductName')" :maxlength="LENGTHS.factory.productName" show-word-limit />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.factory.batch') + ':'" class="form-item" prop="Factory_input.Fac_productionbatch">
-                <el-input v-model="tracedata.Factory_input.Fac_productionbatch" clearable :placeholder="$t('form.factory.inputBatch')" :maxlength="LENGTHS.factory.batch" show-word-limit />
+              <el-form-item :label="$t('form.factory.batch') + ':'" class="form-item" prop="manufacturerInput.productionBatch">
+                <el-input v-model="tracedata.manufacturerInput.productionBatch" clearable :placeholder="$t('form.factory.inputBatch')" :maxlength="LENGTHS.factory.batch" show-word-limit />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.factory.prodTime') + ':'" class="form-item" prop="Factory_input.Fac_productionTime">
-                <el-date-picker v-model="tracedata.Factory_input.Fac_productionTime" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" :placeholder="$t('form.datetimePlaceholder')" style="width: 100%;" :picker-options="noFuturePickerOptions" />
+              <el-form-item :label="$t('form.factory.prodTime') + ':'" class="form-item" prop="manufacturerInput.factoryTime">
+                <el-date-picker v-model="tracedata.manufacturerInput.factoryTime" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" :placeholder="$t('form.datetimePlaceholder')" style="width: 100%;" :picker-options="noFuturePickerOptions" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.factory.factoryName') + ':'" class="form-item" prop="Factory_input.Fac_factoryName">
-                <el-input v-model="tracedata.Factory_input.Fac_factoryName" clearable :placeholder="$t('form.factory.inputFactoryName')" :maxlength="LENGTHS.factory.factoryName" show-word-limit />
+              <el-form-item :label="$t('form.factory.factoryName') + ':'" class="form-item" prop="manufacturerInput.factoryNameAddress">
+                <el-input v-model="tracedata.manufacturerInput.factoryNameAddress" clearable :placeholder="$t('form.factory.inputFactoryName')" :maxlength="LENGTHS.factory.factoryName" show-word-limit />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.factory.phone') + ':'" class="form-item" prop="Factory_input.Fac_contactNumber">
-                <el-input v-model="tracedata.Factory_input.Fac_contactNumber" type="tel" :maxlength="LENGTHS.factory.contactNumber" show-word-limit clearable :placeholder="$t('form.factory.inputPhone')" />
+              <el-form-item :label="$t('form.factory.phone') + ':'" class="form-item" prop="manufacturerInput.contactPhone">
+                <el-input v-model="tracedata.manufacturerInput.contactPhone" type="tel" :maxlength="LENGTHS.factory.contactNumber" show-word-limit clearable :placeholder="$t('form.factory.inputPhone')" />
               </el-form-item>
             </el-col>
           </template>
 
           <template v-if="userType==='物流承运商'">
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.driver.name') + ':'" class="form-item" prop="Driver_input.Dr_name">
-                <el-input v-model="tracedata.Driver_input.Dr_name" clearable :placeholder="$t('form.driver.inputName')" :maxlength="LENGTHS.driver.name" show-word-limit />
+              <el-form-item :label="$t('form.driver.name') + ':'" class="form-item" prop="carrierInput.name">
+                <el-input v-model="tracedata.carrierInput.name" clearable :placeholder="$t('form.driver.inputName')" :maxlength="LENGTHS.driver.name" show-word-limit />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.driver.age') + ':'" class="form-item" prop="Driver_input.Dr_age">
-                <el-input-number v-model="tracedata.Driver_input.Dr_age" :min="18" :max="70" :step="1" :controls="true" />
+              <el-form-item :label="$t('form.driver.age') + ':'" class="form-item" prop="carrierInput.age">
+                <el-input-number v-model="tracedata.carrierInput.age" :min="18" :max="70" :step="1" :controls="true" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.driver.phone') + ':'" class="form-item" prop="Driver_input.Dr_phone">
+              <el-form-item :label="$t('form.driver.phone') + ':'" class="form-item" prop="carrierInput.phone">
                 <!-- 保持原有输入组件 -->
-                <el-input v-model="tracedata.Driver_input.Dr_phone" type="tel" :maxlength="LENGTHS.driver.phone" show-word-limit clearable :placeholder="$t('form.driver.inputPhone')" />
+                <el-input v-model="tracedata.carrierInput.phone" type="tel" :maxlength="LENGTHS.driver.phone" show-word-limit clearable :placeholder="$t('form.driver.inputPhone')" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.driver.carNumber') + ':'" class="form-item" prop="Driver_input.Dr_carNumber">
+              <el-form-item :label="$t('form.driver.carNumber') + ':'" class="form-item" prop="carrierInput.plateNumber">
                 <!-- 允许输入汉字，统一英文字符为大写 -->
                 <el-input
-                  v-model="tracedata.Driver_input.Dr_carNumber"
+                  v-model="tracedata.carrierInput.plateNumber"
                   clearable
                   :maxlength="LENGTHS.driver.carNumber"
                   show-word-limit
@@ -133,32 +133,32 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.driver.transport') + ':'" class="form-item" prop="Driver_input.Dr_transport">
-                <el-input v-model="tracedata.Driver_input.Dr_transport" clearable :placeholder="$t('form.driver.inputTransport')" :maxlength="LENGTHS.driver.transport" show-word-limit />
+              <el-form-item :label="$t('form.driver.transport') + ':'" class="form-item" prop="carrierInput.transportRecord">
+                <el-input v-model="tracedata.carrierInput.transportRecord" clearable :placeholder="$t('form.driver.inputTransport')" :maxlength="LENGTHS.driver.transport" show-word-limit />
               </el-form-item>
             </el-col>
           </template>
 
           <template v-if="userType==='经销商'">
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.shop.storeTime') + ':'" class="form-item" prop="Shop_input.Sh_storeTime">
-                <el-date-picker v-model="tracedata.Shop_input.Sh_storeTime" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" :placeholder="$t('form.datetimePlaceholder')" style="width: 100%;" :picker-options="noFuturePickerOptions" />
+              <el-form-item :label="$t('form.shop.storeTime') + ':'" class="form-item" prop="dealerInput.storeTime">
+                <el-date-picker v-model="tracedata.dealerInput.storeTime" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" :placeholder="$t('form.datetimePlaceholder')" style="width: 100%;" :picker-options="noFuturePickerOptions" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.shop.sellTime') + ':'" class="form-item" prop="Shop_input.Sh_sellTime">
-                <el-date-picker v-model="tracedata.Shop_input.Sh_sellTime" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" :placeholder="$t('form.datetimePlaceholder')" style="width: 100%;" :picker-options="sellPickerOptions" />
+              <el-form-item :label="$t('form.shop.sellTime') + ':'" class="form-item" prop="dealerInput.sellTime">
+                <el-date-picker v-model="tracedata.dealerInput.sellTime" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" :placeholder="$t('form.datetimePlaceholder')" style="width: 100%;" :picker-options="sellPickerOptions" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.shop.name') + ':'" class="form-item" prop="Shop_input.Sh_shopName">
-                <el-input v-model="tracedata.Shop_input.Sh_shopName" clearable :placeholder="$t('form.shop.inputName')" :maxlength="LENGTHS.shop.name" show-word-limit />
+              <el-form-item :label="$t('form.shop.name') + ':'" class="form-item" prop="dealerInput.dealerName">
+                <el-input v-model="tracedata.dealerInput.dealerName" clearable :placeholder="$t('form.shop.inputName')" :maxlength="LENGTHS.shop.name" show-word-limit />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.shop.address') + ':'" class="form-item" prop="Shop_input.Sh_shopAddressCodes">
+              <el-form-item :label="$t('form.shop.address') + ':'" class="form-item" prop="dealerInput.dealerLocationCodes">
                 <el-cascader
-                  v-model="tracedata.Shop_input.Sh_shopAddressCodes"
+                  v-model="tracedata.dealerInput.dealerLocationCodes"
                   :options="regionOptions"
                   clearable
                   filterable
@@ -169,8 +169,8 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="8">
-              <el-form-item :label="$t('form.shop.phone') + ':'" class="form-item" prop="Shop_input.Sh_shopPhone">
-                <el-input v-model="tracedata.Shop_input.Sh_shopPhone" type="tel" :maxlength="LENGTHS.shop.phone" show-word-limit clearable :placeholder="$t('form.shop.inputPhone')" />
+              <el-form-item :label="$t('form.shop.phone') + ':'" class="form-item" prop="dealerInput.dealerPhone">
+                <el-input v-model="tracedata.dealerInput.dealerPhone" type="tel" :maxlength="LENGTHS.shop.phone" show-word-limit clearable :placeholder="$t('form.shop.inputPhone')" />
               </el-form-item>
             </el-col>
           </template>
@@ -195,7 +195,7 @@
 
               <div v-if="imagePreview" class="image-preview-row">
                 <img :src="imagePreview" alt="预览图" class="img-preview">
-                <el-button type="primary" size="mini" plain @click="openDownload(imagePreview, tracedata.traceability_code || 'image')">{{ $t('actions.download') || '下载' }}</el-button>
+                <el-button type="primary" size="mini" plain @click="openDownload(imagePreview, tracedata.traceabilityCode || 'image')">{{ $t('actions.download') || '下载' }}</el-button>
                 <el-button type="danger" size="mini" plain @click="clearImage">{{ $t('common.deleteImage') }}</el-button>
               </div>
             </el-form-item>
@@ -230,6 +230,53 @@
         @view-tx="onViewTx"
         @continue="onContinueInput"
       />
+
+      <!-- 链下文件上传与列表 -->
+      <el-divider>{{ $t('common.fileSection') || '链下文件' }}</el-divider>
+      <div class="file-card">
+        <el-upload
+          action="#"
+          :auto-upload="false"
+          :show-file-list="false"
+          :on-change="onOffchainFileSelected"
+          :before-upload="beforeOffchainUpload"
+          :limit="1"
+          :disabled="offchainUploading || submitting"
+        >
+          <el-button type="primary" size="mini" :loading="offchainUploading">{{ $t('common.uploadFile') || '上传文件(≤50MB)' }}</el-button>
+        </el-upload>
+        <div v-if="offchainFile" class="file-hint">{{ offchainFile.name }} ({{ formatSize(offchainFile.size) }})</div>
+        <div class="file-actions">
+          <el-button
+            size="mini"
+            type="primary"
+            plain
+            :disabled="!offchainFile || offchainUploading || !canUploadOffchain"
+            :loading="offchainUploading"
+            @click="uploadOffchain"
+          >{{ $t('common.submit') || '提 交' }}</el-button>
+          <el-button size="mini" plain :disabled="!offchainFile || offchainUploading" @click="clearOffchainFile">{{ $t('common.reset') || '清 空' }}</el-button>
+        </div>
+        <div class="file-tip">{{ $t('common.fileTip') || '文件将加密后存 IPFS，仅在链上存元数据。制造商可下载全部，其他角色仅可下载自己上传的文件。' }}</div>
+      </div>
+
+      <el-table v-loading="manifestLoading" :data="manifests" size="mini" style="width: 100%; margin-top: 12px;">
+        <el-table-column prop="fileID" label="FileID" width="180" />
+        <el-table-column prop="cid" label="CID" width="220" />
+        <el-table-column prop="hash" label="Hash" min-width="220" show-overflow-tooltip />
+        <el-table-column prop="mime" label="MIME" width="140" />
+        <el-table-column prop="size" :label="$t('common.size') || '大小'" width="120">
+          <template v-slot:default="scope">{{ formatSize(scope.row.size) }}</template>
+        </el-table-column>
+        <el-table-column prop="role" :label="$t('common.role') || '角色'" width="120" />
+        <el-table-column prop="uploader" :label="$t('common.uploader') || '上传者'" width="140" />
+        <el-table-column prop="timestamp" :label="$t('common.time') || '时间'" width="160" />
+        <el-table-column :label="$t('actions.action') || '操作'" width="140">
+          <template v-slot:default="scope">
+            <el-button type="text" size="mini" @click="downloadManifest(scope.row)">{{ $t('actions.download') || '下载' }}</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
     </div>
   </div>
 </template>
@@ -244,6 +291,7 @@ import { createObjectURLSafe, revokeObjectURLSafe, revokeAllObjectURLs } from '@
 import { LENGTHS } from '@/utils/limits'
 import { sanitize } from '@/utils/sanitize'
 import { normalizeRow } from '@/utils/normalize'
+import { uploadFile, listManifests, downloadFile } from '@/api/file'
 
 export default {
   name: 'Uplink',
@@ -251,37 +299,36 @@ export default {
   data() {
     return {
       tracedata: {
-        traceability_code: '',
-        Farmer_input: {
-          Fa_fruitName: '',
-          Fa_origin: '',
-          Fa_originCodes: [],
-          Fa_plantTime: null,
-          Fa_pickingTime: null,
-          Fa_farmerName: ''
-          // Fa_supplierPhone: ''
+        traceabilityCode: '',
+        rawSupplierInput: {
+          productName: '',
+          rawOrigin: '',
+          rawOriginCodes: [],
+          arrivalTime: null,
+          productionTime: null,
+          supplierName: ''
         },
-        Factory_input: {
-          Fac_productName: '',
-          Fac_productionbatch: '',
-          Fac_productionTime: null,
-          Fac_factoryName: '',
-          Fac_contactNumber: ''
+        manufacturerInput: {
+          productName: '',
+          productionBatch: '',
+          factoryTime: null,
+          factoryNameAddress: '',
+          contactPhone: ''
         },
-        Driver_input: {
-          Dr_name: '',
-          Dr_age: '',
-          Dr_phone: '',
-          Dr_carNumber: '',
-          Dr_transport: ''
+        carrierInput: {
+          name: '',
+          age: '',
+          phone: '',
+          plateNumber: '',
+          transportRecord: ''
         },
-        Shop_input: {
-          Sh_storeTime: null,
-          Sh_sellTime: null,
-          Sh_shopName: '',
-          Sh_shopAddress: '',
-          Sh_shopAddressCodes: [],
-          Sh_shopPhone: ''
+        dealerInput: {
+          storeTime: null,
+          sellTime: null,
+          dealerName: '',
+          dealerLocation: '',
+          dealerLocationCodes: [],
+          dealerPhone: ''
         }
       },
       regionOptions,
@@ -307,7 +354,13 @@ export default {
       successDialogVisible: false,
       successInfo: { code: '', txid: '' },
       txExplorer: process.env.VUE_APP_TX_EXPLORER || '',
-      lastUserType: ''
+      lastUserType: '',
+      // 链下文件状态
+      offchainFile: null,
+      offchainUploading: false,
+      manifests: [],
+      manifestLoading: false,
+      debouncedFetch: null
     }
   },
   computed: {
@@ -326,7 +379,7 @@ export default {
         disabledDate: (time) => {
           const t = time.getTime()
           if (t > Date.now()) return true
-          const store = this.tracedata.Shop_input.Sh_storeTime
+          const store = this.tracedata.dealerInput.storeTime
           if (!store) return false
           const sd = this.parseToLocalDate(store)
           if (!sd) return false
@@ -358,6 +411,11 @@ export default {
     },
     canOpenTx() {
       return !!(this.txExplorer && this.successInfo.txid)
+    },
+    canUploadOffchain() {
+      // 必须有溯源码且非零售商
+      const codeOk = this.userType === '原料供应商' ? true : /^\d{18}$/.test((this.tracedata.traceabilityCode || '').trim())
+      return codeOk && this.userType !== '零售商'
     }
   },
   watch: {
@@ -368,21 +426,30 @@ export default {
       })
       // 清理不相关分支数据，避免脏数据残留
       this.resetBranchData(this.userType)
+    },
+    tracedata: {
+      deep: true,
+      handler() {
+        // 溯源码变更时刷新文件清单
+        this.debouncedFetch && this.debouncedFetch()
+      }
     }
   },
   created() {
     this.initRules()
+    this.debouncedFetch = this.debounce(() => this.fetchManifests(), 500)
     // 从路由或查询参数中预填溯源码，并默认锁定
     const q = this.$route && this.$route.query
-    const prefill = q && (q.trace || q.traceability_code)
+    const prefill = q && (q.trace || q.traceabilityCode)
     if (prefill) {
-      this.tracedata.traceability_code = String(prefill).replace(/\D/g, '').slice(0, 18)
+      this.tracedata.traceabilityCode = String(prefill).replace(/\D/g, '').slice(0, 18)
       this.traceCodeLocked = true
     }
     // 记录初始角色
     this.lastUserType = this.userType
     // 在浅渲染时兜底提供 $refs.form.validate
     this.$nextTick(() => this.setFormRefFallback())
+    this.fetchManifests()
   },
   mounted() {
     // 监听窗口尺寸变化，驱动响应式表单
@@ -526,74 +593,27 @@ export default {
     // 初始化各字段校验规则
     initRules() {
       this.rules = {
-        traceability_code: [
-          { validator: this.validateTraceCode, trigger: 'blur' }
-        ],
-        'Farmer_input.Fa_fruitName': [
-          { validator: this.validateFaFruitName, trigger: 'blur' }
-        ],
-        'Farmer_input.Fa_originCodes': [
-          { validator: this.validateFaOriginCodes, trigger: 'change' }
-        ],
-        'Farmer_input.Fa_plantTime': [
-          { validator: this.validateFaPlantTime, trigger: 'change' }
-        ],
-        'Farmer_input.Fa_pickingTime': [
-          { validator: this.validateFaPickingTime, trigger: 'change' }
-        ],
-        'Farmer_input.Fa_farmerName': [
-          { validator: this.validateFaFarmerName, trigger: 'blur' }
-        ],
-        // 'Farmer_input.Fa_supplierPhone': [
-        //   { validator: this.validateFaSupplierPhone, trigger: 'blur' }
-        // ],
-        'Factory_input.Fac_productName': [
-          { validator: this.validateFacProductName, trigger: 'blur' }
-        ],
-        'Factory_input.Fac_productionbatch': [
-          { validator: this.validateFacBatch, trigger: 'blur' }
-        ],
-        'Factory_input.Fac_productionTime': [
-          { validator: this.validateFacProductionTime, trigger: 'change' }
-        ],
-        'Factory_input.Fac_factoryName': [
-          { validator: this.validateFacFactoryName, trigger: 'blur' }
-        ],
-        'Factory_input.Fac_contactNumber': [
-          { required: true, message: '请输入制造商电话', trigger: 'blur' },
-          { validator: this.validatePhoneForFactory, trigger: 'blur' }
-        ],
-        'Driver_input.Dr_name': [
-          { validator: this.validateDrName, trigger: 'blur' }
-        ],
-        'Driver_input.Dr_age': [
-          { validator: this.validateDrAge, trigger: 'blur' }
-        ],
-        'Driver_input.Dr_phone': [
-          { validator: this.validateDrPhone, trigger: 'blur' }
-        ],
-        'Driver_input.Dr_carNumber': [
-          { required: true, message: '请输入车牌号', trigger: 'blur' },
-          { validator: this.validateDrCarNumber, trigger: 'blur' }
-        ],
-        'Driver_input.Dr_transport': [
-          { validator: this.validateDrTransport, trigger: 'blur' }
-        ],
-        'Shop_input.Sh_storeTime': [
-          { validator: this.validateShStoreTime, trigger: 'change' }
-        ],
-        'Shop_input.Sh_sellTime': [
-          { validator: this.validateShSellTime, trigger: 'change' }
-        ],
-        'Shop_input.Sh_shopName': [
-          { validator: this.validateShShopName, trigger: 'blur' }
-        ],
-        'Shop_input.Sh_shopAddressCodes': [
-          { validator: this.validateShShopAddressCodes, trigger: 'change' }
-        ],
-        'Shop_input.Sh_shopPhone': [
-          { validator: this.validateShShopPhone, trigger: 'blur' }
-        ]
+        traceabilityCode: [{ validator: this.validateTraceCode, trigger: 'blur' }],
+        'rawSupplierInput.productName': [{ validator: this.validateRsProductName, trigger: 'blur' }],
+        'rawSupplierInput.rawOriginCodes': [{ validator: this.validateRsOriginCodes, trigger: 'change' }],
+        'rawSupplierInput.arrivalTime': [{ validator: this.validateRsArrivalTime, trigger: 'change' }],
+        'rawSupplierInput.productionTime': [{ validator: this.validateRsProductionTime, trigger: 'change' }],
+        'rawSupplierInput.supplierName': [{ validator: this.validateRsSupplierName, trigger: 'blur' }],
+        'manufacturerInput.productName': [{ validator: this.validateMfProductName, trigger: 'blur' }],
+        'manufacturerInput.productionBatch': [{ validator: this.validateMfBatch, trigger: 'blur' }],
+        'manufacturerInput.factoryTime': [{ validator: this.validateMfFactoryTime, trigger: 'change' }],
+        'manufacturerInput.factoryNameAddress': [{ validator: this.validateMfFactoryName, trigger: 'blur' }],
+        'manufacturerInput.contactPhone': [{ required: true, message: '请输入制造商电话', trigger: 'blur' }, { validator: this.validatePhoneForFactory, trigger: 'blur' }],
+        'carrierInput.name': [{ validator: this.validateCrName, trigger: 'blur' }],
+        'carrierInput.age': [{ validator: this.validateCrAge, trigger: 'blur' }],
+        'carrierInput.phone': [{ validator: this.validateCrPhone, trigger: 'blur' }],
+        'carrierInput.plateNumber': [{ required: true, message: '请输入车牌号', trigger: 'blur' }, { validator: this.validateCrPlate, trigger: 'blur' }],
+        'carrierInput.transportRecord': [{ validator: this.validateCrTransport, trigger: 'blur' }],
+        'dealerInput.storeTime': [{ validator: this.validateDeStoreTime, trigger: 'change' }],
+        'dealerInput.sellTime': [{ validator: this.validateDeSellTime, trigger: 'change' }],
+        'dealerInput.dealerName': [{ validator: this.validateDeDealerName, trigger: 'blur' }],
+        'dealerInput.dealerLocationCodes': [{ validator: this.validateDeLocationCodes, trigger: 'change' }],
+        'dealerInput.dealerPhone': [{ validator: this.validateDePhone, trigger: 'blur' }]
       }
     },
 
@@ -667,12 +687,12 @@ export default {
 
     onCarNumberInput(val) {
       if (typeof val === 'string') {
-        this.tracedata.Driver_input.Dr_carNumber = val.toUpperCase().replace(/[^A-Z0-9\u4e00-\u9fa5]/g, '')
+        this.tracedata.carrierInput.plateNumber = val.toUpperCase().replace(/[^A-Z0-9\u4e00-\u9fa5]/g, '')
       }
     },
     onTraceCodeInput(val) {
       const s = String(val || '')
-      this.tracedata.traceability_code = s.replace(/\D/g, '').slice(0, 18)
+      this.tracedata.traceabilityCode = s.replace(/\D/g, '').slice(0, 18)
     },
     unlockTraceCode() {
       this.traceCodeLocked = false
@@ -742,55 +762,50 @@ export default {
     },
 
     // 农户
-    validateFaFruitName(rule, value, callback) {
+    validateRsProductName(rule, value, callback) {
       if (this.userType !== '原料供应商') return callback()
       return value ? callback() : callback(new Error('请输入原料名称'))
     },
-    validateFaOriginCodes(rule, value, callback) {
+    validateRsOriginCodes(rule, value, callback) {
       if (this.userType !== '原料供应商') return callback()
       if (!Array.isArray(value) || value.length === 0) return callback(new Error('请选择原料产地'))
       return callback()
     },
-    validateFaPlantTime(rule, value, callback) {
+    validateRsArrivalTime(rule, value, callback) {
       if (this.userType !== '原料供应商') return callback()
       if (!value) return callback(new Error('请选择原料生产时间'))
       if (this.isFutureStringDate(value)) return callback(new Error('原料生产时间不能晚于当前时间'))
       return callback()
     },
-    validateFaPickingTime(rule, value, callback) {
+    validateRsProductionTime(rule, value, callback) {
       if (this.userType !== '原料供应商') return callback()
       if (!value) return callback(new Error('请选择原料到货时间'))
       if (this.isFutureStringDate(value)) return callback(new Error('原料到货时间不能晚于当前时间'))
       return callback()
     },
-    validateFaFarmerName(rule, value, callback) {
+    validateRsSupplierName(rule, value, callback) {
       if (this.userType !== '原料供应商') return callback()
       return value ? callback() : callback(new Error('请输入供应商名称'))
     },
-    // validateFaSupplierPhone(rule, value, callback) {
-    //   if (this.userType !== '原料供应商') return callback()
-    //   if (!value) return callback(new Error('请输入供应商电话'))
-    //   return this.isValidPhone(value) ? callback() : callback(new Error('请输入有效的电话号码'))
-    // },
 
     // 制造商
-    validateFacProductName(rule, value, callback) {
+    validateMfProductName(rule, value, callback) {
       if (this.userType !== '制造商') return callback()
       return value ? callback() : callback(new Error('请输入产品名称'))
     },
-    validateFacBatch(rule, value, callback) {
+    validateMfBatch(rule, value, callback) {
       if (this.userType !== '制造商') return callback()
       if (!value) return callback(new Error('请输入生产批次'))
       const ok = /^[A-Za-z0-9_-]{1,32}$/.test(value)
       return ok ? callback() : callback(new Error('批次格式不正确(1-32位字母/数字/_-)'))
     },
-    validateFacProductionTime(rule, value, callback) {
+    validateMfFactoryTime(rule, value, callback) {
       if (this.userType !== '制造商') return callback()
       if (!value) return callback(new Error('请选择生产时间'))
       if (this.isFutureStringDate(value)) return callback(new Error('生产时间不能晚于当前时间'))
       return callback()
     },
-    validateFacFactoryName(rule, value, callback) {
+    validateMfFactoryName(rule, value, callback) {
       if (this.userType !== '制造商') return callback()
       return value ? callback() : callback(new Error('请输入制造商名称与厂址'))
     },
@@ -801,11 +816,11 @@ export default {
     },
 
     // 司机
-    validateDrName(rule, value, callback) {
+    validateCrName(rule, value, callback) {
       if (this.userType !== '物流承运商') return callback()
       return value ? callback() : callback(new Error('请输入姓名'))
     },
-    validateDrAge(rule, value, callback) {
+    validateCrAge(rule, value, callback) {
       if (this.userType !== '物流承运商') return callback()
       if (value === '' || value === null || value === undefined) return callback(new Error('请输入年龄'))
       const n = Number(value)
@@ -813,34 +828,34 @@ export default {
       if (n < 18 || n > 70) return callback(new Error('年龄需在18-70之间'))
       return callback()
     },
-    validateDrPhone(rule, value, callback) {
+    validateCrPhone(rule, value, callback) {
       if (this.userType !== '物流承运商') return callback()
       if (!value) return callback(new Error('请输入联系电话'))
       // 使用针对司机的电话校验
       return this.isValidPhoneForDriver(value) ? callback() : callback(new Error('请输入有效的联系电话'))
     },
-    validateDrCarNumber(rule, value, callback) {
+    validateCrPlate(rule, value, callback) {
       if (this.userType !== '物流承运商') return callback()
       if (!value) return callback(new Error('请输入车牌号'))
       return this.isValidCarNumber(value) ? callback() : callback(new Error('车牌号格式不正确'))
     },
-    validateDrTransport(rule, value, callback) {
+    validateCrTransport(rule, value, callback) {
       if (this.userType !== '物流承运商') return callback()
       return value ? callback() : callback(new Error('请输入运输记录'))
     },
 
     // 经销商
-    validateShStoreTime(rule, value, callback) {
+    validateDeStoreTime(rule, value, callback) {
       if (this.userType !== '经销商') return callback()
       if (!value) return callback(new Error('请选择存入时间'))
       if (this.isFutureStringDate(value)) return callback(new Error('存入时间不能晚于当前时间'))
       return callback()
     },
-    validateShSellTime(rule, value, callback) {
+    validateDeSellTime(rule, value, callback) {
       if (this.userType !== '经销商') return callback()
       if (!value) return callback(new Error('请选择销售时间'))
       if (this.isFutureStringDate(value)) return callback(new Error('销售时间不能晚于当前时间'))
-      const store = this.tracedata.Shop_input.Sh_storeTime
+      const store = this.tracedata.dealerInput.storeTime
       if (store) {
         const sellD = this.parseToLocalDate(value)
         const storeD = this.parseToLocalDate(store)
@@ -850,222 +865,80 @@ export default {
       }
       return callback()
     },
-    validateShShopName(rule, value, callback) {
+    validateDeDealerName(rule, value, callback) {
       if (this.userType !== '经销商') return callback()
       return value ? callback() : callback(new Error('请输入经销商名称'))
     },
-    validateShShopAddressCodes(rule, value, callback) {
+    validateDeLocationCodes(rule, value, callback) {
       if (this.userType !== '经销商') return callback()
       if (!Array.isArray(value) || value.length === 0) return callback(new Error('请选择经销商位置'))
       return callback()
     },
-    validateShShopPhone(rule, value, callback) {
+    validateDePhone(rule, value, callback) {
       if (this.userType !== '经销商') return callback()
       if (!value) return callback(new Error('请输入经销商电话'))
       return this.isValidPhone(value) ? callback() : callback(new Error('请输入有效的经销商电话'))
     },
 
     onRegionChange(codes) {
-      this.tracedata.Farmer_input.Fa_origin = this.codesToText(codes)
+      this.tracedata.rawSupplierInput.rawOrigin = this.codesToText(codes)
     },
     onShopRegionChange(codes) {
-      this.tracedata.Shop_input.Sh_shopAddress = this.codesToText(codes)
+      this.tracedata.dealerInput.dealerLocation = this.codesToText(codes)
     },
 
     // 根据当前角色清空不相关字段，保留通用字段（如溯源码、图片）
     resetBranchData(role) {
-      // 通用：只保留 traceability_code 与图片信息；其他分支全部重置
-      const keep = {
-        traceability_code: this.tracedata.traceability_code
+      const keep = { traceabilityCode: this.tracedata.traceabilityCode }
+      this.tracedata = {
+        traceabilityCode: keep.traceabilityCode,
+        rawSupplierInput: role === '原料供应商' ? this.tracedata.rawSupplierInput : { productName: '', rawOrigin: '', rawOriginCodes: [], arrivalTime: null, productionTime: null, supplierName: '' },
+        manufacturerInput: role === '制造商' ? this.tracedata.manufacturerInput : { productName: '', productionBatch: '', factoryTime: null, factoryNameAddress: '', contactPhone: '' },
+        carrierInput: role === '物流承运商' ? this.tracedata.carrierInput : { name: '', age: '', phone: '', plateNumber: '', transportRecord: '' },
+        dealerInput: role === '经销商' ? this.tracedata.dealerInput : { storeTime: null, sellTime: null, dealerName: '', dealerLocation: '', dealerLocationCodes: [], dealerPhone: '' }
       }
-      if (role === '原料供应商') {
-        // 清空其他分支
-        this.tracedata.Factory_input = {
-          Fac_productName: '',
-          Fac_productionbatch: '',
-          Fac_productionTime: null,
-          Fac_factoryName: '',
-          Fac_contactNumber: ''
-        }
-        this.tracedata.Driver_input = {
-          Dr_name: '',
-          Dr_age: '',
-          Dr_phone: '',
-          Dr_carNumber: '',
-          Dr_transport: ''
-        }
-        this.tracedata.Shop_input = {
-          Sh_storeTime: null,
-          Sh_sellTime: null,
-          Sh_shopName: '',
-          Sh_shopAddress: '',
-          Sh_shopAddressCodes: [],
-          Sh_shopPhone: ''
-        }
-        // 原料产地联动：保留当前值，不做额外处理
-      } else if (role === '制造商') {
-        this.tracedata.Farmer_input = {
-          Fa_fruitName: '',
-          Fa_origin: '',
-          Fa_originCodes: [],
-          Fa_plantTime: null,
-          Fa_pickingTime: null,
-          Fa_farmerName: ''
-        }
-        this.tracedata.Driver_input = {
-          Dr_name: '',
-          Dr_age: '',
-          Dr_phone: '',
-          Dr_carNumber: '',
-          Dr_transport: ''
-        }
-        this.tracedata.Shop_input = {
-          Sh_storeTime: null,
-          Sh_sellTime: null,
-          Sh_shopName: '',
-          Sh_shopAddress: '',
-          Sh_shopAddressCodes: [],
-          Sh_shopPhone: ''
-        }
-      } else if (role === '物流承运商') {
-        this.tracedata.Farmer_input = {
-          Fa_fruitName: '',
-          Fa_origin: '',
-          Fa_originCodes: [],
-          Fa_plantTime: null,
-          Fa_pickingTime: null,
-          Fa_farmerName: ''
-        }
-        this.tracedata.Factory_input = {
-          Fac_productName: '',
-          Fac_productionbatch: '',
-          Fac_productionTime: null,
-          Fac_factoryName: '',
-          Fac_contactNumber: ''
-        }
-        this.tracedata.Shop_input = {
-          Sh_storeTime: null,
-          Sh_sellTime: null,
-          Sh_shopName: '',
-          Sh_shopAddress: '',
-          Sh_shopAddressCodes: [],
-          Sh_shopPhone: ''
-        }
-      } else if (role === '经销商') {
-        this.tracedata.Farmer_input = {
-          Fa_fruitName: '',
-          Fa_origin: '',
-          Fa_originCodes: [],
-          Fa_plantTime: null,
-          Fa_pickingTime: null,
-          Fa_farmerName: ''
-        }
-        this.tracedata.Factory_input = {
-          Fac_productName: '',
-          Fac_productionbatch: '',
-          Fac_productionTime: null,
-          Fac_factoryName: '',
-          Fac_contactNumber: ''
-        }
-        this.tracedata.Driver_input = {
-          Dr_name: '',
-          Dr_age: '',
-          Dr_phone: '',
-          Dr_carNumber: '',
-          Dr_transport: ''
-        }
-        // 经销商地址联动：保留 Sh_shopAddress/Codes 当前值即可
-      } else {
-        // 其他或未知角色：清空全部分支，保留溯源码
-        this.tracedata.Farmer_input = {
-          Fa_fruitName: '',
-          Fa_origin: '',
-          Fa_originCodes: [],
-          Fa_plantTime: null,
-          Fa_pickingTime: null,
-          Fa_farmerName: ''
-        }
-        this.tracedata.Factory_input = {
-          Fac_productName: '',
-          Fac_productionbatch: '',
-          Fac_productionTime: null,
-          Fac_factoryName: '',
-          Fac_contactNumber: ''
-        }
-        this.tracedata.Driver_input = {
-          Dr_name: '',
-          Dr_age: '',
-          Dr_phone: '',
-          Dr_carNumber: '',
-          Dr_transport: ''
-        }
-        this.tracedata.Shop_input = {
-          Sh_storeTime: null,
-          Sh_sellTime: null,
-          Sh_shopName: '',
-          Sh_shopAddress: '',
-          Sh_shopAddressCodes: [],
-          Sh_shopPhone: ''
-        }
-      }
-      // 保留通用字段
-      this.tracedata.traceability_code = keep.traceability_code
-      // 图片不重置，用户可跨角色复用同一图片；如需重置，可取消下行注释
-      // this.imageFile = null; this.imagePreview = null
     },
     getFormArgConfig() {
-      // 返回基于角色的参数映射配置，顺序即 arg1..argN
       return {
         '原料供应商': [
-          (td) => td.Farmer_input.Fa_fruitName,
-          (td) => td.Farmer_input.Fa_origin,
-          (td) => td.Farmer_input.Fa_plantTime,
-          (td) => td.Farmer_input.Fa_pickingTime,
-          (td) => td.Farmer_input.Fa_farmerName
+          (td) => td.rawSupplierInput.productName,
+          (td) => td.rawSupplierInput.rawOrigin,
+          (td) => td.rawSupplierInput.arrivalTime,
+          (td) => td.rawSupplierInput.productionTime,
+          (td) => td.rawSupplierInput.supplierName
         ],
         '制造商': [
-          (td) => td.Factory_input.Fac_productName,
-          (td) => td.Factory_input.Fac_productionbatch,
-          (td) => td.Factory_input.Fac_productionTime,
-          (td) => td.Factory_input.Fac_factoryName,
-          (td) => td.Factory_input.Fac_contactNumber
+          (td) => td.manufacturerInput.productName,
+          (td) => td.manufacturerInput.productionBatch,
+          (td) => td.manufacturerInput.factoryTime,
+          (td) => td.manufacturerInput.factoryNameAddress,
+          (td) => td.manufacturerInput.contactPhone
         ],
         '物流承运商': [
-          (td) => td.Driver_input.Dr_name,
-          (td) => td.Driver_input.Dr_age,
-          (td) => td.Driver_input.Dr_phone,
-          (td) => td.Driver_input.Dr_carNumber,
-          (td) => td.Driver_input.Dr_transport
+          (td) => td.carrierInput.name,
+          (td) => td.carrierInput.age,
+          (td) => td.carrierInput.phone,
+          (td) => td.carrierInput.plateNumber,
+          (td) => td.carrierInput.transportRecord
         ],
         '经销商': [
-          (td) => td.Shop_input.Sh_storeTime,
-          (td) => td.Shop_input.Sh_sellTime,
-          (td) => td.Shop_input.Sh_shopName,
-          (td) => td.Shop_input.Sh_shopAddress,
-          (td) => td.Shop_input.Sh_shopPhone
+          (td) => td.dealerInput.storeTime,
+          (td) => td.dealerInput.sellTime,
+          (td) => td.dealerInput.dealerName,
+          (td) => td.dealerInput.dealerLocation,
+          (td) => td.dealerInput.dealerPhone
         ]
       }
     },
     buildFormData() {
       const formData = new FormData()
       const s = (val, max) => sanitize(val, max)
-      formData.append('traceability_code', s(this.tracedata.traceability_code, LENGTHS.traceCode))
+      formData.append('traceabilityCode', s(this.tracedata.traceabilityCode, LENGTHS.traceCode))
       formData.append('file', this.imageFile)
       const cfg = this.getFormArgConfig()
       const getters = cfg[this.userType] || []
       getters.forEach((getter, idx) => {
-        const raw = getter(this.tracedata)
-        let max = 200
-        if (this.userType === '原料供应商') {
-          max = [LENGTHS.farmer.fruitName, LENGTHS.farmer.origin, 19, 19, LENGTHS.farmer.farmerName][idx] || 200
-        } else if (this.userType === '制造商') {
-          max = [LENGTHS.factory.productName, LENGTHS.factory.batch, 19, LENGTHS.factory.factoryName, LENGTHS.factory.contactNumber][idx] || 200
-        } else if (this.userType === '物流承运商') {
-          max = [LENGTHS.driver.name, 3, LENGTHS.driver.phone, LENGTHS.driver.carNumber, LENGTHS.driver.transport][idx] || 200
-        } else if (this.userType === '经销商') {
-          max = [19, 19, LENGTHS.shop.name, LENGTHS.shop.address, LENGTHS.shop.phone][idx] || 200
-        }
-        const val = s(raw, max)
+        const val = s(getter(this.tracedata), 200)
         formData.append(`arg${idx + 1}`, val)
       })
       return formData
@@ -1090,11 +963,11 @@ export default {
           return
         }
         // 兜底地址文案
-        if (this.userType === '原料供应商' && (!this.tracedata.Farmer_input.Fa_origin) && Array.isArray(this.tracedata.Farmer_input.Fa_originCodes)) {
-          this.tracedata.Farmer_input.Fa_origin = this.codesToText(this.tracedata.Farmer_input.Fa_originCodes)
+        if (this.userType === '原料供应商' && (!this.tracedata.rawSupplierInput.rawOrigin) && Array.isArray(this.tracedata.rawSupplierInput.rawOriginCodes)) {
+          this.tracedata.rawSupplierInput.rawOrigin = this.codesToText(this.tracedata.rawSupplierInput.rawOriginCodes)
         }
-        if (this.userType === '经销商' && (!this.tracedata.Shop_input.Sh_shopAddress) && Array.isArray(this.tracedata.Shop_input.Sh_shopAddressCodes)) {
-          this.tracedata.Shop_input.Sh_shopAddress = this.codesToText(this.tracedata.Shop_input.Sh_shopAddressCodes)
+        if (this.userType === '经销商' && (!this.tracedata.dealerInput.dealerLocation) && Array.isArray(this.tracedata.dealerInput.dealerLocationCodes)) {
+          this.tracedata.dealerInput.dealerLocation = this.codesToText(this.tracedata.dealerInput.dealerLocationCodes)
         }
         const loadingInst = this.$loading({
           lock: true,
@@ -1106,7 +979,7 @@ export default {
           const formData = this.buildFormData()
           const res = await uplink(formData)
           // 统一：拦截器已处理非200为异常，此处即成功分支
-          const code = res.traceability_code || (this.tracedata && this.tracedata.traceability_code)
+          const code = res.traceabilityCode || (this.tracedata && this.tracedata.traceabilityCode)
           const txid = res.txid || res.txId || res.txID || ''
           this.successInfo = { code, txid }
           this.successDialogVisible = true
@@ -1139,24 +1012,24 @@ export default {
     runSyncValidation() {
       // 仅覆盖测试所用的关键规则
       if (this.userType !== '原料供应商' && this.userType !== '零售商') {
-        const v = (this.tracedata.traceability_code || '').trim()
+        const v = (this.tracedata.traceabilityCode || '').trim()
         if (!/^\d{18}$/.test(v)) return false
       }
       if (this.userType === '制造商') {
-        const f = this.tracedata.Factory_input
-        if (!f.Fac_productName || !f.Fac_productionbatch || !f.Fac_productionTime || !f.Fac_factoryName || !f.Fac_contactNumber) return false
-        if (!this.isValidPhone(f.Fac_contactNumber)) return false
+        const f = this.tracedata.manufacturerInput
+        if (!f.productName || !f.productionBatch || !f.factoryTime || !f.factoryNameAddress || !f.contactPhone) return false
+        if (!this.isValidPhone(f.contactPhone)) return false
       }
       return true
     },
     handleReset() {
       // 重置表单为初始状态并清除校验
       this.tracedata = {
-        traceability_code: '',
-        Farmer_input: { Fa_fruitName: '', Fa_origin: '', Fa_originCodes: [], Fa_plantTime: null, Fa_pickingTime: null, Fa_farmerName: '' },
-        Factory_input: { Fac_productName: '', Fac_productionbatch: '', Fac_productionTime: null, Fac_factoryName: '', Fac_contactNumber: '' },
-        Driver_input: { Dr_name: '', Dr_age: '', Dr_phone: '', Dr_carNumber: '', Dr_transport: '' },
-        Shop_input: { Sh_storeTime: null, Sh_sellTime: null, Sh_shopName: '', Sh_shopAddress: '', Sh_shopAddressCodes: [], Sh_shopPhone: '' }
+        traceabilityCode: '',
+        rawSupplierInput: { productName: '', rawOrigin: '', rawOriginCodes: [], arrivalTime: null, productionTime: null, supplierName: '' },
+        manufacturerInput: { productName: '', productionBatch: '', factoryTime: null, factoryNameAddress: '', contactPhone: '' },
+        carrierInput: { name: '', age: '', phone: '', plateNumber: '', transportRecord: '' },
+        dealerInput: { storeTime: null, sellTime: null, dealerName: '', dealerLocation: '', dealerLocationCodes: [], dealerPhone: '' }
       }
       this.imageFile = null
       if (this.imagePreview) { revokeObjectURLSafe(this.imagePreview); this.imagePreview = null }
@@ -1203,13 +1076,13 @@ export default {
     },
     ensureRoleConsistency() {
       if (this.userType === '经销商') {
-        const d = this.tracedata.Driver_input
-        const f = this.tracedata.Factory_input
-        if (d.Dr_name || d.Dr_age || d.Dr_phone || d.Dr_carNumber || d.Dr_transport) {
-          this.tracedata.Driver_input = { Dr_name: '', Dr_age: '', Dr_phone: '', Dr_carNumber: '', Dr_transport: '' }
+        const c = this.tracedata.carrierInput
+        const m = this.tracedata.manufacturerInput
+        if (c.name || c.age || c.phone || c.plateNumber || c.transportRecord) {
+          this.tracedata.carrierInput = { name: '', age: '', phone: '', plateNumber: '', transportRecord: '' }
         }
-        if (f.Fac_productName || f.Fac_productionbatch || f.Fac_productionTime || f.Fac_factoryName || f.Fac_contactNumber) {
-          this.tracedata.Factory_input = { Fac_productName: '', Fac_productionbatch: '', Fac_productionTime: null, Fac_factoryName: '', Fac_contactNumber: '' }
+        if (m.productName || m.productionBatch || m.factoryTime || m.factoryNameAddress || m.contactPhone) {
+          this.tracedata.manufacturerInput = { productName: '', productionBatch: '', factoryTime: null, factoryNameAddress: '', contactPhone: '' }
         }
       }
     },
@@ -1236,35 +1109,127 @@ export default {
       // 仅将同名字段回填到表单 tracedata，避免覆盖用户未填写的项
       if (!n || typeof n !== 'object') return
       const td = this.tracedata
-      td.traceability_code = n.traceability_code || td.traceability_code
-      const f = n.farmer_input || {}
-      const fac = n.factory_input || {}
-      const d = n.driver_input || {}
-      const s = n.shop_input || {}
-      // 农户
-      td.Farmer_input.Fa_fruitName = f.fa_fruitName || td.Farmer_input.Fa_fruitName
-      td.Farmer_input.Fa_origin = f.fa_origin || td.Farmer_input.Fa_origin
-      td.Farmer_input.Fa_plantTime = f.fa_plantTime || td.Farmer_input.Fa_plantTime
-      td.Farmer_input.Fa_pickingTime = f.fa_pickingTime || td.Farmer_input.Fa_pickingTime
-      td.Farmer_input.Fa_farmerName = f.fa_farmerName || td.Farmer_input.Fa_farmerName
-      // 制造商
-      td.Factory_input.Fac_productName = fac.fac_productName || td.Factory_input.Fac_productName
-      td.Factory_input.Fac_productionbatch = fac.fac_productionbatch || td.Factory_input.Fac_productionbatch
-      td.Factory_input.Fac_productionTime = fac.fac_productionTime || td.Factory_input.Fac_productionTime
-      td.Factory_input.Fac_factoryName = fac.fac_factoryName || td.Factory_input.Fac_factoryName
-      td.Factory_input.Fac_contactNumber = fac.fac_contactNumber || td.Factory_input.Fac_contactNumber
-      // 司机
-      td.Driver_input.Dr_name = d.dr_name || td.Driver_input.Dr_name
-      td.Driver_input.Dr_age = d.dr_age || td.Driver_input.Dr_age
-      td.Driver_input.Dr_phone = d.dr_phone || td.Driver_input.Dr_phone
-      td.Driver_input.Dr_carNumber = d.dr_carNumber || td.Driver_input.Dr_carNumber
-      td.Driver_input.Dr_transport = d.dr_transport || td.Driver_input.Dr_transport
-      // 经销商
-      td.Shop_input.Sh_storeTime = s.sh_storeTime || td.Shop_input.Sh_storeTime
-      td.Shop_input.Sh_sellTime = s.sh_sellTime || td.Shop_input.Sh_sellTime
-      td.Shop_input.Sh_shopName = s.sh_shopName || td.Shop_input.Sh_shopName
-      td.Shop_input.Sh_shopAddress = s.sh_shopAddress || td.Shop_input.Sh_shopAddress
-      td.Shop_input.Sh_shopPhone = s.sh_shopPhone || td.Shop_input.Sh_shopPhone
+      td.traceabilityCode = n.traceabilityCode || td.traceabilityCode
+      const raw = n.rawSupplierInput || {}
+      const mf = n.manufacturerInput || {}
+      const cr = n.carrierInput || {}
+      const de = n.dealerInput || {}
+      td.rawSupplierInput.productName = raw.productName || td.rawSupplierInput.productName
+      td.rawSupplierInput.rawOrigin = raw.rawOrigin || td.rawSupplierInput.rawOrigin
+      td.rawSupplierInput.arrivalTime = raw.arrivalTime || td.rawSupplierInput.arrivalTime
+      td.rawSupplierInput.productionTime = raw.productionTime || td.rawSupplierInput.productionTime
+      td.rawSupplierInput.supplierName = raw.supplierName || td.rawSupplierInput.supplierName
+      td.manufacturerInput.productName = mf.productName || td.manufacturerInput.productName
+      td.manufacturerInput.productionBatch = mf.productionBatch || td.manufacturerInput.productionBatch
+      td.manufacturerInput.factoryTime = mf.factoryTime || td.manufacturerInput.factoryTime
+      td.manufacturerInput.factoryNameAddress = mf.factoryNameAddress || td.manufacturerInput.factoryNameAddress
+      td.manufacturerInput.contactPhone = mf.contactPhone || td.manufacturerInput.contactPhone
+      td.carrierInput.name = cr.name || td.carrierInput.name
+      td.carrierInput.age = cr.age || td.carrierInput.age
+      td.carrierInput.phone = cr.phone || td.carrierInput.phone
+      td.carrierInput.plateNumber = cr.plateNumber || td.carrierInput.plateNumber
+      td.carrierInput.transportRecord = cr.transportRecord || td.carrierInput.transportRecord
+      td.dealerInput.storeTime = de.storeTime || td.dealerInput.storeTime
+      td.dealerInput.sellTime = de.sellTime || td.dealerInput.sellTime
+      td.dealerInput.dealerName = de.dealerName || td.dealerInput.dealerName
+      td.dealerInput.dealerLocation = de.dealerLocation || td.dealerInput.dealerLocation
+      td.dealerInput.dealerPhone = de.dealerPhone || td.dealerInput.dealerPhone
+    },
+    async fetchManifests() {
+      const code = (this.tracedata.traceabilityCode || '').trim()
+      if (!code) return
+      this.manifestLoading = true
+      try {
+        const res = await listManifests(code)
+        let payload = res
+        // axios 默认返回 data 字段
+        if (res && res.data !== undefined) payload = res.data
+        if (typeof payload === 'string') {
+          try { payload = JSON.parse(payload) } catch (e) { /* ignore */ }
+        }
+        // 后端可能返回 {code,message,data} 形式
+        if (payload && payload.data) {
+          let inner = payload.data
+          if (typeof inner === 'string') {
+            try { inner = JSON.parse(inner) } catch (e) { /* ignore */ }
+          }
+          payload = inner
+        }
+        this.manifests = Array.isArray(payload) ? payload : []
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'production') console.error('fetch manifests failed', e)
+      } finally {
+        this.manifestLoading = false
+      }
+    },
+    onOffchainFileSelected(file) {
+      this.offchainFile = file.raw || file
+    },
+    beforeOffchainUpload(file) {
+      const max = 50 * 1024 * 1024
+      if (file.size > max) {
+        this.msgError(this.$t('common.fileTooLarge') || '文件超过 50MB')
+        return false
+      }
+      return true
+    },
+    clearOffchainFile() {
+      this.offchainFile = null
+    },
+    async uploadOffchain() {
+      if (!this.offchainFile) return
+      const rawCode = (this.tracedata.traceabilityCode || '').trim()
+      if (this.userType !== '原料供应商' && !/^\d{18}$/.test(rawCode)) {
+        this.msgError(this.$t('form.inputTraceCode'))
+        return
+      }
+      const code = rawCode
+      this.tracedata.traceabilityCode = code
+      this.offchainUploading = true
+      const fd = new FormData()
+      if (code) fd.append('traceabilityCode', code)
+      fd.append('file', this.offchainFile)
+      try {
+        const res = await uploadFile(fd)
+        const payload = res && res.data !== undefined ? res.data : res
+        if (!code && payload && payload.traceabilityCode) {
+          this.tracedata.traceabilityCode = payload.traceabilityCode
+        }
+        this.msgSuccess(this.$t('result.success') || '上传成功')
+        this.clearOffchainFile()
+        this.fetchManifests()
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'production') console.error('upload offchain failed', e)
+        this.msgError(this.$t('result.exception') || '上传失败')
+      } finally {
+        this.offchainUploading = false
+      }
+    },
+    async downloadManifest(row) {
+      try {
+        const resp = await downloadFile(row.fileID)
+        const blobData = resp && resp.data !== undefined ? resp.data : resp
+        const blob = blobData instanceof Blob ? blobData : new Blob([blobData], { type: row.mime || 'application/octet-stream' })
+        const url = window.URL.createObjectURL(blob)
+        this.openDownload(url, row.fileID)
+        window.URL.revokeObjectURL(url)
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'production') console.error('download failed', e)
+        this.msgError(this.$t('result.exception') || '下载失败')
+      }
+    },
+    formatSize(bytes) {
+      if (!bytes && bytes !== 0) return '-'
+      if (bytes < 1024) return bytes + ' B'
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+    },
+    debounce(fn, wait = 300) {
+      let timer
+      return (...args) => {
+        clearTimeout(timer)
+        timer = setTimeout(() => fn.apply(this, args), wait)
+      }
     }
   }
 }
@@ -1294,6 +1259,10 @@ export default {
 .form-help { color: #909399; font-size: 12px; margin-top: 4px; }
 .image-preview-row { margin-top: 10px; display: flex; align-items: center; gap: 8px; }
 .img-preview { max-width: 100%; max-height: 150px; border: 1px solid #dcdfe6; }
+.file-card { padding: 12px; border: 1px dashed #dcdfe6; border-radius: 6px; margin-top: 8px; }
+.file-hint { margin-top: 6px; color: #606266; }
+.file-actions { margin-top: 8px; display: flex; gap: 8px; }
+.file-tip { margin-top: 6px; color: #909399; font-size: 12px; }
 @media (max-width: 767px) {
   .form-footer {
     text-align: center;

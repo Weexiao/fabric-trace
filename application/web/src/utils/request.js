@@ -14,7 +14,7 @@ const service = axios.create({
 service.interceptors.request.use(
   config => {
     // attach auth token if exists
-    if (store.getters.token) {
+    if (store.getters.token && !config.headers['Authorization']) {
       config.headers['Authorization'] = getToken()
     }
     // default JSON headers for POST unless explicitly set
@@ -58,7 +58,6 @@ service.interceptors.response.use(
 
     if (!ok) {
       const message = (res && (res.message || res.msg || res.error)) || '请求异常'
-      // show message and reject with normalized Error including response payload
       Message({ message, type: 'error', duration: 5 * 1000 })
       const err = new Error(message)
       err.response = response
@@ -66,8 +65,8 @@ service.interceptors.response.use(
       err.code = code
       return Promise.reject(err)
     }
-    // Success: return normalized object (ensure data exists)
-    return res && res.data !== undefined ? res : { data: res }
+    // 成功时直接返回后端payload，避免再次包装导致字段缺失
+    return res
   },
   error => {
     // Network or unexpected errors

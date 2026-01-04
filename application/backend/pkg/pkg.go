@@ -53,3 +53,9 @@ func GetFileExt(filename string) string {
 	// 返回.之后的部分（转为小写，避免大小写问题）
 	return strings.ToLower(filename[lastDot+1:])
 }
+
+// SHA256Hex computes sha256 hex of given data.
+func SHA256Hex(data []byte) string {
+	h := sha256.Sum256(data)
+	return hex.EncodeToString(h[:])
+}

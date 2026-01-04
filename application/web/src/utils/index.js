@@ -117,20 +117,32 @@ export function param2Obj(url) {
 }
 
 /**
- * Safely get deep property by dot path. Returns defVal when missing/null.
+ * Safely get deep property by path (supports dot & bracket, or key array). Returns defVal when missing/null.
+ * Examples: safeGet(obj, 'a.b[0].c'), safeGet(obj, ['a', 'b', 0, 'c'])
  * @param {object} obj
- * @param {string} path dot-separated keys, e.g. "a.b.c"
+ * @param {string|array} path dot-separated keys or array of keys, e.g. "a.b.c" or ['a', 'b', 'c']
  * @param {*} defVal default value when missing
  * @returns {*}
  */
 export function safeGet(obj, path, defVal = '') {
   try {
-    if (!obj || !path) return defVal
-    const keys = String(path).split('.')
+    if (obj == null || path == null) return defVal
+    // Normalize path to array of keys
+    let keys
+    if (Array.isArray(path)) {
+      keys = path
+    } else {
+      keys = String(path)
+        .replace(/\[("|')?(.*?)\1?\]/g, '.$2') // [0] or ["key"] -> .0 / .key
+        .split('.')
+        .filter(k => k !== '')
+    }
+
     let cur = obj
-    for (const k of keys) {
-      if (cur && Object.prototype.hasOwnProperty.call(cur, k)) {
-        cur = cur[k]
+    for (const rawKey of keys) {
+      const key = isNaN(rawKey) ? rawKey : Number(rawKey)
+      if (cur != null && Object.prototype.hasOwnProperty.call(cur, key)) {
+        cur = cur[key]
       } else {
         return defVal
       }

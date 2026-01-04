@@ -5,112 +5,137 @@ package chaincode
 用户ID
 用户类型
 实名认证信息哈希,包括用户注册的姓名、身份证号、手机号、注册平台同意协议签名的哈希
-农产品列表
+工业产品列表
 */
 type User struct {
-	UserID       string   `json:"userID"`
-	UserType     string   `json:"userType"`
-	RealInfoHash string   `json:"realInfoHash"`
-	FruitList    []*Fruit `json:"fruitList"`
+	UserID       string               `json:"userID"`
+	UserType     string               `json:"userType"`
+	RealInfoHash string               `json:"realInfoHash"`
+	ProductList  []*IndustrialProduct `json:"productList"`
 }
 
 /*
-定义农产品结构体
+定义工业产品结构体
 溯源码
 原料供应商输入
 制造商输入
 物流承运商输入
 经销商输入
 */
-type Fruit struct {
-	Traceability_code string        `json:"traceability_code"`
-	Farmer_input      Farmer_input  `json:"farmer_input"`
-	Factory_input     Factory_input `json:"factory_input"`
-	Driver_input      Driver_input  `json:"driver_input"`
-	Shop_input        Shop_input    `json:"shop_input"`
+type IndustrialProduct struct {
+	TraceabilityCode  string            `json:"traceabilityCode"`
+	RawSupplierInput  RawSupplierInput  `json:"rawSupplierInput"`
+	ManufacturerInput ManufacturerInput `json:"manufacturerInput"`
+	CarrierInput      CarrierInput      `json:"carrierInput"`
+	DealerInput       DealerInput       `json:"dealerInput"`
 }
 
 // HistoryQueryResult structure used for handling result of history query
 type HistoryQueryResult struct {
-	Record    *Fruit `json:"record"`
-	TxId      string `json:"txId"`
-	Timestamp string `json:"timestamp"`
-	IsDelete  bool   `json:"isDelete"`
+	Record    *IndustrialProduct `json:"record"`
+	TxId      string             `json:"txId"`
+	Timestamp string             `json:"timestamp"`
+	IsDelete  bool               `json:"isDelete"`
 }
 
 /*
-原料供应商
-农产品的溯源码，一物一码，主打高端市场（自动生成）
-农产品名称
-产地
-种植时间
-采摘时间
+原料供应商（原料提供商）
+工业产品的溯源码，一物一码，主打高端市场（自动生成）
+产品名称
+原料产地
+原料到货时间
+原料生产时间
 原料供应商名称
 */
-type Farmer_input struct {
-	Fa_fruitName   string `json:"fa_fruitName"`
-	Fa_origin      string `json:"fa_origin"`
-	Fa_plantTime   string `json:"fa_plantTime"`
-	Fa_pickingTime string `json:"fa_pickingTime"`
-	Fa_farmerName  string `json:"fa_farmerName"`
-	Fa_img         string `json:"fa_img"` // 图片链接
-	Fa_Txid        string `json:"fa_txid"`
-	Fa_Timestamp   string `json:"fa_timestamp"`
+type RawSupplierInput struct {
+	ProductName    string `json:"productName"`
+	RawOrigin      string `json:"rawOrigin"`
+	ArrivalTime    string `json:"arrivalTime"`
+	ProductionTime string `json:"productionTime"`
+	SupplierName   string `json:"supplierName"`
+	Img            string `json:"img"`
+	Txid           string `json:"txid"`
+	Timestamp      string `json:"timestamp"`
 }
 
 /*
-制造商
+制造商输入
 商品名称
 生产批次
 出厂时间（可以防止黑心商家修改时间）
 制造商名称与厂址
 联系电话
 */
-type Factory_input struct {
-	Fac_productName     string `json:"fac_productName"`
-	Fac_productionbatch string `json:"fac_productionbatch"`
-	Fac_productionTime  string `json:"fac_productionTime"`
-	Fac_factoryName     string `json:"fac_factoryName"`
-	Fac_contactNumber   string `json:"fac_contactNumber"`
-	Fac_img             string `json:"fac_img"` // 图片链接
-	Fac_Txid            string `json:"fac_txid"`
-	Fac_Timestamp       string `json:"fac_timestamp"`
+type ManufacturerInput struct {
+	ProductName        string `json:"productName"`
+	ProductionBatch    string `json:"productionBatch"`
+	FactoryTime        string `json:"factoryTime"`
+	FactoryNameAddress string `json:"factoryNameAddress"`
+	ContactPhone       string `json:"contactPhone"`
+	Img                string `json:"img"`
+	Txid               string `json:"txid"`
+	Timestamp          string `json:"timestamp"`
 }
 
 /*
-物流承运商
+物流承运商输入
 姓名
 年龄
 电话
 车牌号
 运输记录
 */
-type Driver_input struct {
-	Dr_name      string `json:"dr_name"`
-	Dr_age       string `json:"dr_age"`
-	Dr_phone     string `json:"dr_phone"`
-	Dr_carNumber string `json:"dr_carNumber"`
-	Dr_transport string `json:"dr_transport"`
-	Dr_img       string `json:"dr_img"` // 图片链接
-	Dr_Txid      string `json:"dr_txid"`
-	Dr_Timestamp string `json:"dr_timestamp"`
+type CarrierInput struct {
+	Name            string `json:"name"`
+	Age             string `json:"age"`
+	Phone           string `json:"phone"`
+	PlateNumber     string `json:"plateNumber"`
+	TransportRecord string `json:"transportRecord"`
+	Img             string `json:"img"`
+	Txid            string `json:"txid"`
+	Timestamp       string `json:"timestamp"`
 }
 
 /*
-经销商
+经销商输入
 存入时间
 销售时间
 经销商名称
 经销商位置
 经销商电话
 */
-type Shop_input struct {
-	Sh_storeTime   string `json:"sh_storeTime"`
-	Sh_sellTime    string `json:"sh_sellTime"`
-	Sh_shopName    string `json:"sh_shopName"`
-	Sh_shopAddress string `json:"sh_shopAddress"`
-	Sh_shopPhone   string `json:"sh_shopPhone"`
-	Sh_img         string `json:"sh_img"` // 图片链接
-	Sh_Txid        string `json:"sh_txid"`
-	Sh_Timestamp   string `json:"sh_timestamp"`
+type DealerInput struct {
+	StoreTime      string `json:"storeTime"`
+	SellTime       string `json:"sellTime"`
+	DealerName     string `json:"dealerName"`
+	DealerLocation string `json:"dealerLocation"`
+	DealerPhone    string `json:"dealerPhone"`
+	Img            string `json:"img"`
+	Txid           string `json:"txid"`
+	Timestamp      string `json:"timestamp"`
+}
+
+// FileRole defines who uploaded/owns a file for role-based permissions.
+type FileRole string
+
+const (
+	FileRoleRawSupplier  FileRole = "raw_supplier"
+	FileRoleManufacturer FileRole = "manufacturer"
+	FileRoleCarrier      FileRole = "carrier"
+	FileRoleDealer       FileRole = "dealer"
+)
+
+// FileManifest captures off-chain file metadata stored on-chain.
+type FileManifest struct {
+	TraceabilityCode string   `json:"traceabilityCode"`
+	FileID           string   `json:"fileID"`
+	CID              string   `json:"cid"`
+	Hash             string   `json:"hash"`
+	Mime             string   `json:"mime"`
+	Size             int64    `json:"size"`
+	Encrypted        bool     `json:"encrypted"`
+	KeyVersion       string   `json:"keyVersion"`
+	Role             FileRole `json:"role"`
+	Uploader         string   `json:"uploader"`
+	Timestamp        string   `json:"timestamp"`
 }

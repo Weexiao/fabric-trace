@@ -68,6 +68,16 @@
       <el-button type="text" style="display: block;margin-top: 20px;" @click="dialog1Visible = true">{{ $t('build.howToDelete') }}</el-button>
     </div>
     <div style="height: 30px;" />
+    <el-card shadow="hover" class="card-item">
+      <div slot="header" class="clearfix">
+        <span>系统介绍</span>
+      </div>
+      <div class="text item">
+        <p>parm1: 基于区块链的工业产品溯源系统</p>
+        <p>parm2: 工业产品信息</p>
+        <p>parm3: 工业产品名称</p>
+      </div>
+    </el-card>
   </div>
 </template>
 

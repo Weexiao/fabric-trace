@@ -22,14 +22,24 @@ const messages = {
       uploading: '数据上链中...',
       uploadChooseImg: '选择图片',
       deleteImage: '删除图片',
-      errorSubmitFlow: '提交流程异常，请重试'
+      errorSubmitFlow: '提交流程异常，请重试',
+      fileSection: '链下文件',
+      uploadFile: '上传文件(≤50MB)',
+      fileTip: '文件将加密后存 IPFS，仅在链上存元数据。制造商可下载全部，其他角色仅可下载自己上传的文件。',
+      fileTooLarge: '文件超过 50MB',
+      size: '大小',
+      role: '角色',
+      uploader: '上传者',
+      time: '时间'
     },
     actions: {
       copy: '复制',
       copied: '已复制',
       viewTrace: '查看详情',
       viewTx: '查看交易',
-      continue: '继续录入'
+      continue: '继续录入',
+      download: '下载',
+      action: '操作'
     },
     dialog: {
       uplinkSuccess: '上链成功',
@@ -235,14 +245,19 @@ const messages = {
       uploading: 'Submitting to blockchain...',
       uploadChooseImg: 'Choose Image',
       deleteImage: 'Remove Image',
-      errorSubmitFlow: 'Submission flow error, please retry'
+      errorSubmitFlow: 'Submission flow error, please retry',
+      fileSection: 'Off-chain Files',
+      uploadFile: 'Upload File (≤50MB)',
+      fileTip: 'Files will be encrypted and stored in IPFS, only metadata is stored on-chain. Manufacturers can download all, other roles can only download their own uploaded files.',
+      fileTooLarge: 'File exceeds 50MB'
     },
     actions: {
       copy: 'Copy',
       copied: 'Copied',
       viewTrace: 'View Details',
       viewTx: 'View Transaction',
-      continue: 'Continue Input'
+      continue: 'Continue Input',
+      download: 'Download'
     },
     dialog: {
       uplinkSuccess: 'Uplink Succeeded',

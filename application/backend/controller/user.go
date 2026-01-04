@@ -39,6 +39,7 @@ func Register(c *gin.Context) {
 		"code":    200,
 		"message": "register success",
 		"txid":    res,
+		"userID":  user.UserID,
 	})
 }
 

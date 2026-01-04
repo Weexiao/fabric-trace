@@ -285,7 +285,7 @@ export default {
         this.$store.dispatch('user/register', this.registerForm).then(response => {
           this.$router.push({ path: this.redirect || '/' })
           this.$message({
-            message: '注册成功，链上交易ID：' + response.txid,
+            message: '注册成功，链上交易ID：' + response.data.txid,
             type: 'success'
           })
           // 注册成功后清空注册表单

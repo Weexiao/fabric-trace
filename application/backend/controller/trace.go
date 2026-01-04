@@ -8,15 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// 保存了农产品上链与查询的函数
+// 保存了工业产品上链与查询的函数
 
 func Uplink(c *gin.Context) {
 	// 与userID不一样，取ID从第二位作为溯源码，即18位，雪花ID的结构如下（转化为10进制共19位）：
 	// +--------------------------------------------------------------------------+
 	// | 1 Bit Unused | 41 Bit Timestamp |  10 Bit NodeID  |   12 Bit Sequence ID |
 	// +--------------------------------------------------------------------------+
-	farmer_traceability_code := pkg.GenerateID()[1:]
-	args := buildArgs(c, farmer_traceability_code)
+	traceCode := pkg.GenerateID()[1:]
+	args := buildArgs(c, traceCode)
 	if args == nil {
 		return
 	}
@@ -28,16 +28,16 @@ func Uplink(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{
-		"code":              200,
-		"message":           "uplink success",
-		"txid":              res,
-		"traceability_code": args[1],
+		"code":             200,
+		"message":          "uplink success",
+		"txid":             res,
+		"traceabilityCode": args[1],
 	})
 }
 
-// 获取农产品的上链信息
-func GetFruitInfo(c *gin.Context) {
-	res, err := pkg.ChaincodeQuery("GetFruitInfo", c.PostForm("traceability_code"))
+// 获取工业产品的上链信息
+func GetIndustrialProductInfo(c *gin.Context) {
+	res, err := pkg.ChaincodeQuery("GetIndustrialProductInfo", c.PostForm("traceabilityCode"))
 	if err != nil {
 		c.JSON(200, gin.H{
 			"message": "查询失败：" + err.Error(),
@@ -52,14 +52,15 @@ func GetFruitInfo(c *gin.Context) {
 
 }
 
-// 获取用户的农产品ID列表
-func GetFruitList(c *gin.Context) {
+// 获取用户的工业产品ID列表
+func GetIndustrialProductList(c *gin.Context) {
 	userID, _ := c.Get("userID")
-	res, err := pkg.ChaincodeQuery("GetFruitList", userID.(string))
+	res, err := pkg.ChaincodeQuery("GetIndustrialProductList", userID.(string))
 	if err != nil {
 		c.JSON(200, gin.H{
 			"message": "query failed" + err.Error(),
 		})
+		return
 	}
 	c.JSON(200, gin.H{
 		"code":    200,
@@ -68,14 +69,14 @@ func GetFruitList(c *gin.Context) {
 	})
 }
 
-// 获取所有的农产品信息
-func GetAllFruitInfo(c *gin.Context) {
-	res, err := pkg.ChaincodeQuery("GetAllFruitInfo", "")
-	fmt.Print("res", res)
+// 获取所有的工业产品信息
+func GetAllIndustrialProductInfo(c *gin.Context) {
+	res, err := pkg.ChaincodeQuery("GetAllIndustrialProductInfo", "")
 	if err != nil {
 		c.JSON(200, gin.H{
 			"message": "query failed" + err.Error(),
 		})
+		return
 	}
 	c.JSON(200, gin.H{
 		"code":    200,
@@ -84,14 +85,14 @@ func GetAllFruitInfo(c *gin.Context) {
 	})
 }
 
-// 获取农产品上链历史
-// func (s *SmartContract) GetFruitHistory(ctx contractapi.TransactionContextInterface, traceability_code string) ([]HistoryQueryResult, error) {
-func GetFruitHistory(c *gin.Context) {
-	res, err := pkg.ChaincodeQuery("GetFruitHistory", c.PostForm("traceability_code"))
+// 获取工业产品上链历史
+func GetIndustrialProductHistory(c *gin.Context) {
+	res, err := pkg.ChaincodeQuery("GetIndustrialProductHistory", c.PostForm("traceabilityCode"))
 	if err != nil {
 		c.JSON(200, gin.H{
 			"message": "query failed" + err.Error(),
 		})
+		return
 	}
 	c.JSON(200, gin.H{
 		"code":    200,
@@ -100,42 +101,41 @@ func GetFruitHistory(c *gin.Context) {
 	})
 }
 
-func buildArgs(c *gin.Context, farmer_traceability_code string) []string {
+func buildArgs(c *gin.Context, traceCode string) []string {
 	var args []string
 	userID, _ := c.Get("userID")
 	userType, _ := pkg.ChaincodeQuery("GetUserType", userID.(string))
 	args = append(args, userID.(string))
-	fmt.Print(userID)
-	// 种植户不需要输入溯源码，其他用户需要，通过雪花算法生成ID
 	if userType == "原料供应商" {
-		args = append(args, farmer_traceability_code)
+		args = append(args, traceCode)
 	} else {
-		// 检查溯源码是否正确
-		res, err := pkg.ChaincodeQuery("GetFruitInfo", c.PostForm("traceability_code"))
-		if res == "" || err != nil || len(c.PostForm("traceability_code")) != 18 {
+		res, err := pkg.ChaincodeQuery("GetIndustrialProductInfo", c.PostForm("traceabilityCode"))
+		if res == "" || err != nil || len(c.PostForm("traceabilityCode")) != 18 {
 			c.JSON(200, gin.H{
 				"message": "请检查溯源码是否正确!!",
 			})
 			return nil
-		} else {
-			args = append(args, c.PostForm("traceability_code"))
 		}
+		args = append(args, c.PostForm("traceabilityCode"))
 	}
-	args = append(args, c.PostForm("arg1"))
-	args = append(args, c.PostForm("arg2"))
-	args = append(args, c.PostForm("arg3"))
-	args = append(args, c.PostForm("arg4"))
-	args = append(args, c.PostForm("arg5"))
+	args = append(args, c.PostForm("arg1"), c.PostForm("arg2"), c.PostForm("arg3"), c.PostForm("arg4"), c.PostForm("arg5"))
 	file, _ := c.FormFile("file")
 	if file != nil {
-		// 保存前端传的图片
-		c.SaveUploadedFile(file, "files/uploadfiles/"+file.Filename)
-		// 计算文件的SHA256哈希值
+		if err := c.SaveUploadedFile(file, "files/uploadfiles/"+file.Filename); err != nil {
+			c.JSON(500, gin.H{
+				"message": "upload failed: " + err.Error(),
+			})
+			return nil
+		}
 		fileSHA256, _ := pkg.CalculateFileSHA256("files/uploadfiles/" + file.Filename)
 		ext := pkg.GetFileExt(file.Filename)
-		c.SaveUploadedFile(file, fmt.Sprintf("files/images/%s.%s", fileSHA256, ext))
-		// 清理临时传的文件
-		os.Remove("files/uploadfiles/" + file.Filename)
+		if err := c.SaveUploadedFile(file, fmt.Sprintf("files/images/%s.%s", fileSHA256, ext)); err != nil {
+			c.JSON(500, gin.H{
+				"message": "save image failed: " + err.Error(),
+			})
+			return nil
+		}
+		_ = os.Remove("files/uploadfiles/" + file.Filename)
 		args = append(args, fmt.Sprintf("%s.%s", fileSHA256, ext))
 	}
 	args = append(args, "")

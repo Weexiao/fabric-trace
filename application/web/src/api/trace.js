@@ -11,10 +11,10 @@ export function uplink(data) {
   })
 }
 
-// getFruitInfo 使用 JSON
-export function getFruitInfo(data) {
+// getIndustrialProductInfo 使用 JSON
+export function getIndustrialProductInfo(data) {
   return request({
-    url: '/getFruitInfo',
+    url: '/getIndustrialProductInfo',
     method: 'post',
     headers: {
       'Content-Type': 'application/json'
@@ -23,10 +23,10 @@ export function getFruitInfo(data) {
   })
 }
 
-// getFruitList
-export function getFruitList(data) {
+// getIndustrialProductList
+export function getIndustrialProductList(data) {
   return request({
-    url: '/getFruitList',
+    url: '/getIndustrialProductList',
     method: 'post',
     headers: {
       'Content-Type': 'multipart/form-data'
@@ -37,10 +37,10 @@ export function getFruitList(data) {
 
 // 服务端分页的“获取所有产品信息”
 // 约定 data: { page: number, pageSize: number }
-export function getAllFruitInfo(data) {
+export function getAllIndustrialProductInfo(data) {
   const payload = data && typeof data === 'object' ? data : {}
   return request({
-    url: '/getAllFruitInfo',
+    url: '/getAllIndustrialProductInfo',
     method: 'post',
     headers: {
       'Content-Type': 'application/json'
@@ -49,10 +49,10 @@ export function getAllFruitInfo(data) {
   })
 }
 
-// getFruitHistory
-export function getFruitHistory(data) {
+// getIndustrialProductHistory
+export function getIndustrialProductHistory(data) {
   return request({
-    url: '/getFruitHistory',
+    url: '/getIndustrialProductHistory',
     method: 'post',
     headers: {
       'Content-Type': 'multipart/form-data'

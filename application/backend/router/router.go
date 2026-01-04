@@ -42,16 +42,22 @@ func SetupRouter() *gin.Engine {
 	r.POST("/logout", con.Logout)
 	//查询用户的类型
 	r.POST("/getInfo", middleware.JWTAuthMiddleware(), con.GetInfo)
-	//农产品上链
+	//工业产品上链
 	r.POST("/uplink", middleware.JWTAuthMiddleware(), con.Uplink)
-	// 获取农产品的上链信息
-	r.POST("/getFruitInfo", con.GetFruitInfo)
-	// 获取用户的农产品ID列表
-	r.POST("/getFruitList", middleware.JWTAuthMiddleware(), con.GetFruitList)
-	// 获取所有的农产品信息
-	r.POST("/getAllFruitInfo", middleware.JWTAuthMiddleware(), con.GetAllFruitInfo)
-	// 获取农产品上链历史(溯源)
-	r.POST("/getFruitHistory", middleware.JWTAuthMiddleware(), con.GetFruitHistory)
+	// 获取工业产品的上链信息
+	r.POST("/getIndustrialProductInfo", con.GetIndustrialProductInfo)
+	// 获取用户的工业产品ID列表
+	r.POST("/getIndustrialProductList", middleware.JWTAuthMiddleware(), con.GetIndustrialProductList)
+	// 获取所有的工业产品信息
+	r.POST("/getAllIndustrialProductInfo", middleware.JWTAuthMiddleware(), con.GetAllIndustrialProductInfo)
+	// 获取工业产品上链历史(溯源)
+	r.POST("/getIndustrialProductHistory", middleware.JWTAuthMiddleware(), con.GetIndustrialProductHistory)
 	r.GET("/getImg/:filename", con.GetImg) // 获取图片
+
+	// 文件上链相关接口
+	auth := middleware.JWTAuthMiddleware()
+	r.POST("/file/upload", auth, con.UploadFile)
+	r.GET("/file/download/:fileID", auth, con.DownloadFile)
+	r.POST("/file/list", auth, con.ListManifests)
 	return r
 }

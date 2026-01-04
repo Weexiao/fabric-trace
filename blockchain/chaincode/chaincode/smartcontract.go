@@ -2,6 +2,7 @@ package chaincode
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -21,7 +22,7 @@ func (s *SmartContract) RegisterUser(ctx contractapi.TransactionContextInterface
 		UserID:       userID,
 		UserType:     userType,
 		RealInfoHash: realInfoHash,
-		FruitList:    []*Fruit{},
+		ProductList:  []*IndustrialProduct{},
 	}
 	userAsBytes, err := json.Marshal(user)
 	if err != nil {
@@ -34,25 +35,25 @@ func (s *SmartContract) RegisterUser(ctx contractapi.TransactionContextInterface
 	return nil
 }
 
-// 农产品上链，传入用户ID、农产品上链信息
-func (s *SmartContract) Uplink(ctx contractapi.TransactionContextInterface, userID string, traceability_code string, arg1 string, arg2 string, arg3 string, arg4 string, arg5 string, arg6 string) (string, error) {
+// 工业产品上链，传入用户ID、工业产品上链信息
+func (s *SmartContract) Uplink(ctx contractapi.TransactionContextInterface, userID string, traceabilityCode string, arg1 string, arg2 string, arg3 string, arg4 string, arg5 string, arg6 string) (string, error) {
 	// 获取用户类型
 	userType, err := s.GetUserType(ctx, userID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get user type: %v", err)
 	}
 
-	// 通过溯源码获取农产品的上链信息
-	FruitAsBytes, err := ctx.GetStub().GetState(traceability_code)
+	// 通过溯源码获取工业产品的上链信息
+	productAsBytes, err := ctx.GetStub().GetState(traceabilityCode)
 	if err != nil {
 		return "", fmt.Errorf("failed to read from world state: %v", err)
 	}
-	// 将农产品的信息转换为Fruit结构体
-	var fruit Fruit
-	if FruitAsBytes != nil {
-		err = json.Unmarshal(FruitAsBytes, &fruit)
+	// 将工业产品的信息转换为结构体
+	var product IndustrialProduct
+	if productAsBytes != nil {
+		err = json.Unmarshal(productAsBytes, &product)
 		if err != nil {
-			return "", fmt.Errorf("failed to unmarshal fruit: %v", err)
+			return "", fmt.Errorf("failed to unmarshal product: %v", err)
 		}
 	}
 
@@ -62,83 +63,80 @@ func (s *SmartContract) Uplink(ctx contractapi.TransactionContextInterface, user
 		return "", fmt.Errorf("failed to read TxTimestamp: %v", err)
 	}
 	timeLocation, _ := time.LoadLocation("Asia/Shanghai") // 选择你所在的时区
-	time := time.Unix(txtime.Seconds, 0).In(timeLocation).Format("2006-01-02 15:04:05")
+	txTimeStr := time.Unix(txtime.Seconds, 0).In(timeLocation).Format("2006-01-02 15:04:05")
 
 	// 获取交易ID
 	txid := ctx.GetStub().GetTxID()
-	// 给农产品信息中加上溯源码
-	fruit.Traceability_code = traceability_code
+	// 给工业产品信息中加上溯源码
+	product.TraceabilityCode = traceabilityCode
 	// 不同用户类型的上链的参数不一致
 	switch userType {
 	// 原料供应商
 	case "原料供应商":
-		// 将传入的农产品上链信息转换为Farmer_input结构体
-		fruit.Farmer_input.Fa_fruitName = arg1
-		fruit.Farmer_input.Fa_origin = arg2
-		fruit.Farmer_input.Fa_plantTime = arg3
-		fruit.Farmer_input.Fa_pickingTime = arg4
-		fruit.Farmer_input.Fa_farmerName = arg5
-		fruit.Farmer_input.Fa_img = arg6
-		fruit.Farmer_input.Fa_Txid = txid
-		fruit.Farmer_input.Fa_Timestamp = time
+		// 原料提供商输入
+		product.RawSupplierInput.ProductName = arg1
+		product.RawSupplierInput.RawOrigin = arg2
+		product.RawSupplierInput.ArrivalTime = arg3
+		product.RawSupplierInput.ProductionTime = arg4
+		product.RawSupplierInput.SupplierName = arg5
+		product.RawSupplierInput.Img = arg6
+		product.RawSupplierInput.Txid = txid
+		product.RawSupplierInput.Timestamp = txTimeStr
 	// 制造商
 	case "制造商":
-		// 将传入的农产品上链信息转换为Factory_input结构体
-		fruit.Factory_input.Fac_productName = arg1
-		fruit.Factory_input.Fac_productionbatch = arg2
-		fruit.Factory_input.Fac_productionTime = arg3
-		fruit.Factory_input.Fac_factoryName = arg4
-		fruit.Factory_input.Fac_contactNumber = arg5
-		fruit.Factory_input.Fac_img = arg6
-		fruit.Factory_input.Fac_Txid = txid
-		fruit.Factory_input.Fac_Timestamp = time
+		product.ManufacturerInput.ProductName = arg1
+		product.ManufacturerInput.ProductionBatch = arg2
+		product.ManufacturerInput.FactoryTime = arg3
+		product.ManufacturerInput.FactoryNameAddress = arg4
+		product.ManufacturerInput.ContactPhone = arg5
+		product.ManufacturerInput.Img = arg6
+		product.ManufacturerInput.Txid = txid
+		product.ManufacturerInput.Timestamp = txTimeStr
 	// 物流承运商
 	case "物流承运商":
-		// 将传入的农产品上链信息转换为Driver_input结构体
-		fruit.Driver_input.Dr_name = arg1
-		fruit.Driver_input.Dr_age = arg2
-		fruit.Driver_input.Dr_phone = arg3
-		fruit.Driver_input.Dr_carNumber = arg4
-		fruit.Driver_input.Dr_transport = arg5
-		fruit.Driver_input.Dr_img = arg6
-		fruit.Driver_input.Dr_Txid = txid
-		fruit.Driver_input.Dr_Timestamp = time
+		product.CarrierInput.Name = arg1
+		product.CarrierInput.Age = arg2
+		product.CarrierInput.Phone = arg3
+		product.CarrierInput.PlateNumber = arg4
+		product.CarrierInput.TransportRecord = arg5
+		product.CarrierInput.Img = arg6
+		product.CarrierInput.Txid = txid
+		product.CarrierInput.Timestamp = txTimeStr
 	// 经销商
 	case "经销商":
-		// 将传入的农产品上链信息转换为Shop_input结构体
-		fruit.Shop_input.Sh_storeTime = arg1
-		fruit.Shop_input.Sh_sellTime = arg2
-		fruit.Shop_input.Sh_shopName = arg3
-		fruit.Shop_input.Sh_shopAddress = arg4
-		fruit.Shop_input.Sh_shopPhone = arg5
-		fruit.Shop_input.Sh_img = arg6
-		fruit.Shop_input.Sh_Txid = txid
-		fruit.Shop_input.Sh_Timestamp = time
+		product.DealerInput.StoreTime = arg1
+		product.DealerInput.SellTime = arg2
+		product.DealerInput.DealerName = arg3
+		product.DealerInput.DealerLocation = arg4
+		product.DealerInput.DealerPhone = arg5
+		product.DealerInput.Img = arg6
+		product.DealerInput.Txid = txid
+		product.DealerInput.Timestamp = txTimeStr
 
 	}
 
-	//将农产品的信息转换为json格式
-	fruitAsBytes, err := json.Marshal(fruit)
+	//将工业产品的信息转换为json格式
+	productAsBytes, err = json.Marshal(product)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal fruit: %v", err)
+		return "", fmt.Errorf("failed to marshal product: %v", err)
 	}
-	//将农产品的信息存入区块链
-	err = ctx.GetStub().PutState(traceability_code, fruitAsBytes)
+	//将工业产品的信息存入区块链
+	err = ctx.GetStub().PutState(traceabilityCode, productAsBytes)
 	if err != nil {
-		return "", fmt.Errorf("failed to put fruit: %v", err)
+		return "", fmt.Errorf("failed to put product: %v", err)
 	}
-	//将农产品存入用户的农产品列表
-	err = s.AddFruit(ctx, userID, &fruit)
+	//将工业产品存入用户的工业产品列表
+	err = s.AddIndustrialProduct(ctx, userID, &product)
 	if err != nil {
-		return "", fmt.Errorf("failed to add fruit to user: %v", err)
+		return "", fmt.Errorf("failed to add product to user: %v", err)
 
 	}
 
 	return txid, nil
 }
 
-// 添加农产品到用户的农产品列表
-func (s *SmartContract) AddFruit(ctx contractapi.TransactionContextInterface, userID string, fruit *Fruit) error {
+// 添加工业产品到用户的列表
+func (s *SmartContract) AddIndustrialProduct(ctx contractapi.TransactionContextInterface, userID string, product *IndustrialProduct) error {
 	userBytes, err := ctx.GetStub().GetState(userID)
 	if err != nil {
 		return fmt.Errorf("failed to read from world state: %v", err)
@@ -152,14 +150,14 @@ func (s *SmartContract) AddFruit(ctx contractapi.TransactionContextInterface, us
 	if err != nil {
 		return err
 	}
-	// 遍历用户的农产品列表，检查是否已经存在该农产品
-	for _, existingFruit := range user.FruitList {
-		if existingFruit.Traceability_code == fruit.Traceability_code {
-			return fmt.Errorf("the fruit with traceability code %s already exists in user %s's fruit list", fruit.Traceability_code, userID)
+	// 遍历用户的工业产品列表，检查是否已经存在该工业产品
+	for _, existingProduct := range user.ProductList {
+		if existingProduct.TraceabilityCode == product.TraceabilityCode {
+			return fmt.Errorf("the product with traceability code %s already exists in user %s's product list", product.TraceabilityCode, userID)
 		}
 	}
-	// 如果不存在，则将农产品添加到用户的农产品列表中
-	user.FruitList = append(user.FruitList, fruit)
+	// 如果不存在，则将工业产品添加到用户的工业产品列表中
+	user.ProductList = append(user.ProductList, product)
 	userAsBytes, err := json.Marshal(user)
 	if err != nil {
 		return err
@@ -207,29 +205,29 @@ func (s *SmartContract) GetUserInfo(ctx contractapi.TransactionContextInterface,
 	return &user, nil
 }
 
-// 获取农产品的上链信息
-func (s *SmartContract) GetFruitInfo(ctx contractapi.TransactionContextInterface, traceability_code string) (*Fruit, error) {
-	FruitAsBytes, err := ctx.GetStub().GetState(traceability_code)
+// 获取工业产品的上链信息
+func (s *SmartContract) GetIndustrialProductInfo(ctx contractapi.TransactionContextInterface, traceabilityCode string) (*IndustrialProduct, error) {
+	productAsBytes, err := ctx.GetStub().GetState(traceabilityCode)
 	if err != nil {
-		return &Fruit{}, fmt.Errorf("failed to read from world state: %v", err)
+		return &IndustrialProduct{}, fmt.Errorf("failed to read from world state: %v", err)
 	}
 
-	// 将返回的结果转换为Fruit结构体
-	var fruit Fruit
-	if FruitAsBytes != nil {
-		err = json.Unmarshal(FruitAsBytes, &fruit)
+	// 将返回的结果转换为IndustrialProduct结构体
+	var product IndustrialProduct
+	if productAsBytes != nil {
+		err = json.Unmarshal(productAsBytes, &product)
 		if err != nil {
-			return &Fruit{}, fmt.Errorf("failed to unmarshal fruit: %v", err)
+			return &IndustrialProduct{}, fmt.Errorf("failed to unmarshal product: %v", err)
 		}
-		if fruit.Traceability_code != "" {
-			return &fruit, nil
+		if product.TraceabilityCode != "" {
+			return &product, nil
 		}
 	}
-	return &Fruit{}, fmt.Errorf("the fruit %s does not exist", traceability_code)
+	return &IndustrialProduct{}, fmt.Errorf("the industrial product %s does not exist", traceabilityCode)
 }
 
-// 获取用户的农产品ID列表
-func (s *SmartContract) GetFruitList(ctx contractapi.TransactionContextInterface, userID string) ([]*Fruit, error) {
+// 获取用户的工业产品列表
+func (s *SmartContract) GetIndustrialProductList(ctx contractapi.TransactionContextInterface, userID string) ([]*IndustrialProduct, error) {
 	userBytes, err := ctx.GetStub().GetState(userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read from world state: %v", err)
@@ -243,44 +241,44 @@ func (s *SmartContract) GetFruitList(ctx contractapi.TransactionContextInterface
 	if err != nil {
 		return nil, err
 	}
-	return user.FruitList, nil
+	return user.ProductList, nil
 }
 
-// 获取所有的农产品信息
-func (s *SmartContract) GetAllFruitInfo(ctx contractapi.TransactionContextInterface) ([]Fruit, error) {
-	fruitListAsBytes, err := ctx.GetStub().GetStateByRange("", "")
+// 获取所有的工业产品信息
+func (s *SmartContract) GetAllIndustrialProductInfo(ctx contractapi.TransactionContextInterface) ([]IndustrialProduct, error) {
+	productListAsBytes, err := ctx.GetStub().GetStateByRange("", "")
 	if err != nil {
 		return nil, fmt.Errorf("failed to read from world state: %v", err)
 	}
-	defer fruitListAsBytes.Close()
-	var fruits []Fruit
-	for fruitListAsBytes.HasNext() {
-		queryResponse, err := fruitListAsBytes.Next()
+	defer func() { _ = productListAsBytes.Close() }()
+	var products []IndustrialProduct
+	for productListAsBytes.HasNext() {
+		queryResponse, err := productListAsBytes.Next()
 		if err != nil {
 			return nil, err
 		}
-		var fruit Fruit
-		err = json.Unmarshal(queryResponse.Value, &fruit)
+		var product IndustrialProduct
+		err = json.Unmarshal(queryResponse.Value, &product)
 		if err != nil {
 			return nil, err
 		}
-		// 过滤非农产品的信息
-		if fruit.Traceability_code != "" {
-			fruits = append(fruits, fruit)
+		// 过滤非工业产品的信息
+		if product.TraceabilityCode != "" {
+			products = append(products, product)
 		}
 	}
-	return fruits, nil
+	return products, nil
 }
 
-// 获取农产品上链历史
-func (s *SmartContract) GetFruitHistory(ctx contractapi.TransactionContextInterface, traceability_code string) ([]HistoryQueryResult, error) {
-	log.Printf("GetAssetHistory: ID %v", traceability_code)
+// 获取工业产品上链历史
+func (s *SmartContract) GetIndustrialProductHistory(ctx contractapi.TransactionContextInterface, traceabilityCode string) ([]HistoryQueryResult, error) {
+	log.Printf("GetAssetHistory: ID %v", traceabilityCode)
 
-	resultsIterator, err := ctx.GetStub().GetHistoryForKey(traceability_code)
+	resultsIterator, err := ctx.GetStub().GetHistoryForKey(traceabilityCode)
 	if err != nil {
 		return nil, err
 	}
-	defer resultsIterator.Close()
+	defer func() { _ = resultsIterator.Close() }()
 
 	var records []HistoryQueryResult
 	for resultsIterator.HasNext() {
@@ -289,15 +287,15 @@ func (s *SmartContract) GetFruitHistory(ctx contractapi.TransactionContextInterf
 			return nil, err
 		}
 
-		var fruit Fruit
+		var product IndustrialProduct
 		if len(response.Value) > 0 {
-			err = json.Unmarshal(response.Value, &fruit)
+			err = json.Unmarshal(response.Value, &product)
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			fruit = Fruit{
-				Traceability_code: traceability_code,
+			product = IndustrialProduct{
+				TraceabilityCode: traceabilityCode,
 			}
 		}
 
@@ -319,11 +317,146 @@ func (s *SmartContract) GetFruitHistory(ctx contractapi.TransactionContextInterf
 		record := HistoryQueryResult{
 			TxId:      response.TxId,
 			Timestamp: formattedTime,
-			Record:    &fruit,
+			Record:    &product,
 			IsDelete:  response.IsDelete,
 		}
 		records = append(records, record)
 	}
 
 	return records, nil
+}
+
+const maxFileSizeBytes int64 = 50 * 1024 * 1024
+
+// PutFileManifest writes off-chain file metadata onto the ledger with role/size checks.
+func (s *SmartContract) PutFileManifest(ctx contractapi.TransactionContextInterface, userID string, manifestJSON string) (string, error) {
+	var manifest FileManifest
+	if err := json.Unmarshal([]byte(manifestJSON), &manifest); err != nil {
+		return "", fmt.Errorf("invalid manifest json: %v", err)
+	}
+	if manifest.TraceabilityCode == "" || manifest.FileID == "" || manifest.CID == "" || manifest.Hash == "" {
+		return "", errors.New("traceabilityCode, fileID, cid, hash are required")
+	}
+	if manifest.Size <= 0 || manifest.Size > maxFileSizeBytes {
+		return "", fmt.Errorf("file size invalid or exceeds limit %d bytes", maxFileSizeBytes)
+	}
+	userType, err := s.GetUserType(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	role, err := mapUserTypeToFileRole(userType)
+	if err != nil {
+		return "", err
+	}
+	if manifest.Role != "" && manifest.Role != role {
+		return "", fmt.Errorf("role mismatch: manifest role %s not allowed for user type %s", manifest.Role, userType)
+	}
+	manifest.Role = role
+	if manifest.Encrypted && manifest.KeyVersion == "" {
+		return "", errors.New("keyVersion required when encrypted is true")
+	}
+
+	// ensure product exists
+	_, err = s.GetIndustrialProductInfo(ctx, manifest.TraceabilityCode)
+	if err != nil {
+		return "", fmt.Errorf("traceability code not found: %v", err)
+	}
+
+	fileKey := "file:" + manifest.FileID
+	existing, err := ctx.GetStub().GetState(fileKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to read manifest: %v", err)
+	}
+	if existing != nil {
+		return "", fmt.Errorf("file manifest %s already exists", manifest.FileID)
+	}
+
+	// stamp uploader and timestamp from transaction context
+	manifest.Uploader = userID
+	txtime, err := ctx.GetStub().GetTxTimestamp()
+	if err != nil {
+		return "", fmt.Errorf("failed to get tx timestamp: %v", err)
+	}
+	timeLocation, _ := time.LoadLocation("Asia/Shanghai")
+	manifest.Timestamp = time.Unix(txtime.Seconds, 0).In(timeLocation).Format("2006-01-02 15:04:05")
+
+	manifestBytes, err := json.Marshal(manifest)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal manifest: %v", err)
+	}
+
+	if err := ctx.GetStub().PutState(fileKey, manifestBytes); err != nil {
+		return "", fmt.Errorf("failed to put manifest: %v", err)
+	}
+
+	// create composite key for traceabilityCode -> fileID index
+	indexKey, err := ctx.GetStub().CreateCompositeKey("trace~file", []string{manifest.TraceabilityCode, manifest.FileID})
+	if err != nil {
+		return "", fmt.Errorf("failed to create index key: %v", err)
+	}
+	if err := ctx.GetStub().PutState(indexKey, []byte{0}); err != nil {
+		return "", fmt.Errorf("failed to put index: %v", err)
+	}
+
+	return manifest.FileID, nil
+}
+
+// GetFileManifest returns manifest by fileID.
+func (s *SmartContract) GetFileManifest(ctx contractapi.TransactionContextInterface, fileID string) (*FileManifest, error) {
+	fileKey := "file:" + fileID
+	data, err := ctx.GetStub().GetState(fileKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read manifest: %v", err)
+	}
+	if data == nil {
+		return nil, fmt.Errorf("file manifest %s not found", fileID)
+	}
+	var manifest FileManifest
+	if err := json.Unmarshal(data, &manifest); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal manifest: %v", err)
+	}
+	return &manifest, nil
+}
+
+// GetFileManifestsByTrace lists manifests associated with a traceability code.
+func (s *SmartContract) GetFileManifestsByTrace(ctx contractapi.TransactionContextInterface, traceabilityCode string) ([]FileManifest, error) {
+	iter, err := ctx.GetStub().GetStateByPartialCompositeKey("trace~file", []string{traceabilityCode})
+	if err != nil {
+		return nil, fmt.Errorf("failed to query index: %v", err)
+	}
+	defer func() { _ = iter.Close() }()
+
+	var manifests []FileManifest
+	for iter.HasNext() {
+		resp, err := iter.Next()
+		if err != nil {
+			return nil, err
+		}
+		_, parts, err := ctx.GetStub().SplitCompositeKey(resp.Key)
+		if err != nil || len(parts) != 2 {
+			continue
+		}
+		fileID := parts[1]
+		m, err := s.GetFileManifest(ctx, fileID)
+		if err != nil {
+			return nil, err
+		}
+		manifests = append(manifests, *m)
+	}
+	return manifests, nil
+}
+
+func mapUserTypeToFileRole(userType string) (FileRole, error) {
+	switch userType {
+	case "原料供应商":
+		return FileRoleRawSupplier, nil
+	case "制造商":
+		return FileRoleManufacturer, nil
+	case "物流承运商":
+		return FileRoleCarrier, nil
+	case "经销商":
+		return FileRoleDealer, nil
+	default:
+		return "", fmt.Errorf("unsupported user type %s", userType)
+	}
 }

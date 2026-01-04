@@ -14,4 +14,14 @@ mysql:
   password : "fabrictrace"
   charset: "utf8mb4"
   db : "fabrictrace"
-  
+
+storage:
+  type: "ipfs"               # ipfs | s3 | local (当前用 ipfs)
+  max_size_mb: 50             # 单文件最大 50MB
+  ipfs:
+    api_url: "http://127.0.0.1:5001"  # 本机 IPFS API
+    gateway_url: ""          # 可选：对外访问的网关基址
+crypto:
+  enabled: true
+  key_version: "v1"
+  key_env: "CRYPTO_KEY"      # 从环境变量读取 32 字节 AES key
