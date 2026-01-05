@@ -269,3 +269,43 @@ sequenceDiagram
 - 为什么用雪花 ID 生成溯源码：本地即可生成，不依赖中心号段，冲突概率低，长度固定便于扫码/输入；
 - 为什么用 JWT：无状态、轻量，适合前后端分离与多端调用；
 - 为什么前后端分离：界面与逻辑解耦，升级互不影响，便于并行开发。
+
+## 15. 章节落地映射与补充建议
+- 目的与范围：已在 1/2 提及概述，可在本节补充目标/非目标和读者；位置：`Detailed_Design_Document.md` 开头。
+- 背景与业务场景：可结合 `README.md` 与 `controller/trace.go` 的业务流，补充现状痛点、角色与流程假设。
+- 需求（功能/非功能）：
+  - 功能：注册/登录/上链/查询/文件上传已在 4/6 说明；建议补充用户角色权限矩阵、异常路径（链码/SDK/存储失败重试）。
+  - 非功能：缺少性能/可用性/隐私指标，建议写吞吐/延迟目标、可用性与合规要求。
+- 架构总览：
+  - 组件与拓扑：已在 2 简述，建议增加部署/拓扑图，覆盖前端（`application/web`）、后端（`application/backend`）、Fabric 网络（`blockchain/network`）、链码（`blockchain/chaincode`）。
+  - 信任与组织模型：需描述组织/节点/通道/CA，出处 `blockchain/network/configtx`、`setOrgEnv.sh`。
+- 数据与域模型：
+  - 链上模型：`blockchain/chaincode/chaincode/model.go` 已列，补充键设计（TraceabilityCode 为主键）、索引/RangeQuery 方案、历史保留策略。
+  - 链下模型：`application/backend/model/model.go` 用户表字段；说明密码加密方式、RealInfoHash 算法、文件存储目录 `files/` 与命名（SHA256）。
+  - 私有/敏感数据：当前未用 PDC，若需隐私可在此规划；链上仅存文件名/哈希，链下存原文件。
+- 交易与智能合约设计：
+  - 链码函数：`smartcontract.go`/`trace.go` 已列，建议补充每个函数的前置/后置条件、错误码、参数校验。
+  - 背书策略与生命周期：文档缺失，需记录当前链码定义与背书策略（参考 `blockchain/network/trace.tar.gz` 部署参数），并写升级/治理流程（chaincode package → install → approve → commit）。
+- 接口与集成：
+  - REST：`controller/*.go` 和 `router/router.go` 已列路由，建议为每个接口补充请求/响应 schema、鉴权要求、幂等性与限流策略；对接前端 API 目录 `web/src/api`。
+  - 外部集成：若有对象存储/第三方监管接口，需注明；当前仅本地文件与 Fabric。
+- 共识与网络配置：
+  - 配置来源：`blockchain/network`（`network.sh`, `configtx.yaml`, `compose/`）、BFT 示例 `bft-config/configtx.yaml`。
+  - 需补充：排序服务类型与参数（Raft/BFT）、通道策略、ACL/MSP 配置、组织成员加入/证书颁发与吊销流程。
+- 安全与隐私：
+  - 身份生命周期：CA 目录 `organizations/fabric-ca` 与脚本 `setOrgEnv.sh`，需描述注册/颁发/吊销/轮换。
+  - 接口鉴权：`pkg/jwt.go` + `middleware/auth.go`，需补充密码存储方式（加盐哈希）、HTTPS/TLS 要求、敏感字段加密、审计日志位置。
+  - 数据机密性：若未来启用 PDC/通道隔离或文件加密，需在此规划。
+- 运维与部署：
+  - 现有：`application/start_docker.sh`、`start_prod.sh`、`Dockerfile`，网络脚本 `blockchain/network/start.sh`、监控目录 `prometheus-grafana`。
+  - 需补充：环境差异（dev/test/prod）配置、CI/CD 流程、监控告警指标、备份与恢复（账本/证书/DB/文件）、证书过期轮换、回滚与扩缩容策略。
+- 性能与容量规划：
+  - 可参考压测配置 `tape/config_*.yaml`；文档需写目标吞吐/延迟、测试场景、硬件/节点规模假设、容量估算与瓶颈分析。
+- 测试与验证：
+  - 现状：链码/后端未见自动化测试，前端 tests 模板未用；有 Tape 压测配置。
+  - 建议：补充单测/集成/e2e 计划，链码模拟/集成测试策略，接口契约测试，安全测试（越权/重放）。
+- 风险与未决事项：
+  - 建议列出：链码升级/背书变更风险、证书过期、存储容量、对象存储迁移、性能退化、依赖版本安全。
+- 附录与工件：
+  - 图表：保持时序图，补充部署图、架构图、数据流图；可放 `docs/`。
+  - 契约：API schema、错误码表、链码参数表、配置样例（Fabric connection profile、config.yaml）。
