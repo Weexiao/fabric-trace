@@ -21,4 +21,15 @@ mysql:
 #   password : "fabrictrace"
 #   charset: "utf8mb4"
 #   db : "fabrictrace"
-  
+
+storage:
+  type: "ipfs"
+  max_size_mb: 50
+  ipfs:
+    api_url: "http://172.17.0.1:5001"
+    gateway_url: ""
+
+crypto:
+  enabled: false
+  key_version: "v1"
+  key_env: "CRYPTO_KEY"

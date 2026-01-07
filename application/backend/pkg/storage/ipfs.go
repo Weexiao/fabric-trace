@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"strconv"
@@ -31,6 +32,7 @@ func NewIPFSClient(apiURL string, maxSizeBytes int64) *IPFSClient {
 
 // Put uploads data to IPFS add endpoint. Payload is buffered (<=限制)，hash/size基于完整字节。
 func (c *IPFSClient) Put(ctx context.Context, r io.Reader, sizeHint int64) (cid string, size int64, hashHex string, err error) {
+	_ = sizeHint
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return
@@ -43,17 +45,34 @@ func (c *IPFSClient) Put(ctx context.Context, r io.Reader, sizeHint int64) (cid 
 	h := sha256.Sum256(data)
 	hashHex = hex.EncodeToString(h[:])
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.apiURL+"/api/v0/add?pin=true", bytes.NewReader(data))
+	// IPFS add expects multipart/form-data with a file field.
+	var body bytes.Buffer
+	mw := multipart.NewWriter(&body)
+	fw, e := mw.CreateFormFile("file", "blob")
+	if e != nil {
+		err = e
+		return
+	}
+	if _, e = fw.Write(data); e != nil {
+		err = e
+		return
+	}
+	if e = mw.Close(); e != nil {
+		err = e
+		return
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.apiURL+"/api/v0/add?pin=true", &body)
 	if err != nil {
 		return
 	}
-	req.Header.Set("Content-Type", "application/octet-stream")
+	req.Header.Set("Content-Type", mw.FormDataContentType())
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -89,11 +108,11 @@ func (c *IPFSClient) Get(ctx context.Context, cid string) (io.ReadCloser, int64,
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		return nil, 0, fmt.Errorf("ipfs cat failed: status %d, body %s", resp.StatusCode, string(body))
 	}
 	data, err := io.ReadAll(resp.Body)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if err != nil {
 		return nil, 0, err
 	}

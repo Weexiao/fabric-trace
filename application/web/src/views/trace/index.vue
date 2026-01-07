@@ -8,6 +8,7 @@
         clearable
         class="trace-input"
         @input="onInputChange"
+        @clear="onInputClear"
         @keyup.enter.native="fruitInfo"
       />
       <el-button type="primary" plain :disabled="loading" :loading="loading" @click="fruitInfo"> {{ $t('actions.viewTrace') || '查询' }} </el-button>
@@ -89,11 +90,31 @@
                       </a>
                       <el-button type="text" icon="el-icon-download" :href="imgHref(props.row, 'rawSupplierInput.img')" :aria-label="$t('actions.download')" @click.prevent="openDownload(imgHref(props.row, 'rawSupplierInput.img'), safeGet(props.row, 'rawSupplierInput.productName', 'image'))">{{ $t('actions.download') || '下载' }}</el-button>
                     </el-form-item>
+                    <el-form-item v-if="safeGet(props.row, 'rawSupplierInput.imgHash', '')" :label="($t('trace.fileHash') || '文件哈希(SHA256)') + ':'" class="hash-item">
+                      <span class="hash-text">{{ safeGet(props.row, 'rawSupplierInput.imgHash', '') }}</span>
+                      <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(safeGet(props.row, 'rawSupplierInput.imgHash', ''))">{{ $t('actions.copy') || '复制' }}</el-button>
+                    </el-form-item>
                     <el-form-item :label="($t('trace.txid') || '区块链交易ID') + ':'">
                       <span>{{ safeGet(props.row, 'rawSupplierInput.txid', '') }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('trace.txTime') || '区块链交易时间') + ':'">
                       <span>{{ formatDateTime(safeGet(props.row, 'rawSupplierInput.timestamp', '')) }}</span>
+                    </el-form-item>
+                    <!-- 在四个环节中加入按行缓存的 IPFS hash 展示（raw_supplier / manufacturer / carrier / dealer） -->
+                    <!-- 原料供应商环节：放在 imgHash 之后、txid 之前 -->
+                    <el-form-item v-if="safeGet(props.row, '_fileHashesLoading', false)" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                      <span>{{ $t('common.uploading') || '正在加载...' }}</span>
+                    </el-form-item>
+                    <el-form-item v-else-if="safeGet(props.row, '_fileHashesError', '')" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                      <span style="color:#f56c6c;">{{ safeGet(props.row, '_fileHashesError', '') }}</span>
+                    </el-form-item>
+                    <el-form-item v-else-if="safeGet(props.row, '_fileHashesByRole.raw_supplier', []).length" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                      <div>
+                        <div v-for="h in safeGet(props.row, '_fileHashesByRole.raw_supplier', [])" :key="h" class="hash-row">
+                          <span class="hash-text">{{ h }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        </div>
+                      </div>
                     </el-form-item>
                   </el-form>
                 </el-collapse-item>
@@ -140,11 +161,31 @@
                       </a>
                       <el-button type="text" icon="el-icon-download" :href="imgHref(props.row, 'manufacturerInput.img')" :aria-label="$t('actions.download')" @click.prevent="openDownload(imgHref(props.row, 'manufacturerInput.img'), safeGet(props.row, 'manufacturerInput.productName', 'image'))">{{ $t('actions.download') || '下载' }}</el-button>
                     </el-form-item>
+                    <el-form-item v-if="safeGet(props.row, 'manufacturerInput.imgHash', '')" :label="($t('trace.fileHash') || '文件哈希(SHA256)') + ':'" class="hash-item">
+                      <span class="hash-text">{{ safeGet(props.row, 'manufacturerInput.imgHash', '') }}</span>
+                      <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(safeGet(props.row, 'manufacturerInput.imgHash', ''))">{{ $t('actions.copy') || '复制' }}</el-button>
+                    </el-form-item>
                     <el-form-item :label="($t('trace.txid') || '区块链交易ID') + ':'">
                       <span>{{ safeGet(props.row, 'manufacturerInput.txid', '') }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('trace.txTime') || '区块链交易时间') + ':'">
                       <span>{{ formatDateTime(safeGet(props.row, 'manufacturerInput.timestamp', '')) }}</span>
+                    </el-form-item>
+                    <!-- 在四个环节中加入按行缓存的 IPFS hash 展示（raw_supplier / manufacturer / carrier / dealer） -->
+                    <!-- 制造商环节：放在 imgHash 之后、txid 之前 -->
+                    <el-form-item v-if="safeGet(props.row, '_fileHashesLoading', false)" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                      <span>{{ $t('common.uploading') || '正在加载...' }}</span>
+                    </el-form-item>
+                    <el-form-item v-else-if="safeGet(props.row, '_fileHashesError', '')" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                      <span style="color:#f56c6c;">{{ safeGet(props.row, '_fileHashesError', '') }}</span>
+                    </el-form-item>
+                    <el-form-item v-else-if="safeGet(props.row, '_fileHashesByRole.manufacturer', []).length" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                      <div>
+                        <div v-for="h in safeGet(props.row, '_fileHashesByRole.manufacturer', [])" :key="h" class="hash-row">
+                          <span class="hash-text">{{ h }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        </div>
+                      </div>
                     </el-form-item>
                   </el-form>
                 </el-collapse-item>
@@ -191,11 +232,31 @@
                       </a>
                       <el-button type="text" icon="el-icon-download" :href="imgHref(props.row, 'carrierInput.img')" :aria-label="$t('actions.download')" @click.prevent="openDownload(imgHref(props.row, 'carrierInput.img'), safeGet(props.row, 'carrierInput.name', 'image'))">{{ $t('actions.download') || '下载' }}</el-button>
                     </el-form-item>
+                    <el-form-item v-if="safeGet(props.row, 'carrierInput.imgHash', '')" :label="($t('trace.fileHash') || '文件哈希(SHA256)') + ':'" class="hash-item">
+                      <span class="hash-text">{{ safeGet(props.row, 'carrierInput.imgHash', '') }}</span>
+                      <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(safeGet(props.row, 'carrierInput.imgHash', ''))">{{ $t('actions.copy') || '复制' }}</el-button>
+                    </el-form-item>
                     <el-form-item :label="($t('trace.txid') || '区块链交易ID') + ':'">
                       <span>{{ safeGet(props.row, 'carrierInput.txid', '') }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('trace.txTime') || '区块链交易时间') + ':'">
                       <span>{{ formatDateTime(safeGet(props.row, 'carrierInput.timestamp', '')) }}</span>
+                    </el-form-item>
+                    <!-- 在四个环节中加入按行缓存的 IPFS hash 展示（raw_supplier / manufacturer / carrier / dealer） -->
+                    <!-- 物流承运商环节：放在 imgHash 之后、txid 之前 -->
+                    <el-form-item v-if="safeGet(props.row, '_fileHashesLoading', false)" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                      <span>{{ $t('common.uploading') || '正在加载...' }}</span>
+                    </el-form-item>
+                    <el-form-item v-else-if="safeGet(props.row, '_fileHashesError', '')" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                      <span style="color:#f56c6c;">{{ safeGet(props.row, '_fileHashesError', '') }}</span>
+                    </el-form-item>
+                    <el-form-item v-else-if="safeGet(props.row, '_fileHashesByRole.carrier', []).length" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                      <div>
+                        <div v-for="h in safeGet(props.row, '_fileHashesByRole.carrier', [])" :key="h" class="hash-row">
+                          <span class="hash-text">{{ h }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        </div>
+                      </div>
                     </el-form-item>
                   </el-form>
                 </el-collapse-item>
@@ -242,11 +303,31 @@
                       </a>
                       <el-button type="text" icon="el-icon-download" :href="imgHref(props.row, 'dealerInput.img')" :aria-label="$t('actions.download')" @click.prevent="openDownload(imgHref(props.row, 'dealerInput.img'), safeGet(props.row, 'dealerInput.dealerName', 'image'))">{{ $t('actions.download') || '下载' }}</el-button>
                     </el-form-item>
+                    <el-form-item v-if="safeGet(props.row, 'dealerInput.imgHash', '')" :label="($t('trace.fileHash') || '文件哈希(SHA256)') + ':'" class="hash-item">
+                      <span class="hash-text">{{ safeGet(props.row, 'dealerInput.imgHash', '') }}</span>
+                      <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(safeGet(props.row, 'dealerInput.imgHash', ''))">{{ $t('actions.copy') || '复制' }}</el-button>
+                    </el-form-item>
                     <el-form-item :label="($t('trace.txid') || '区块链交易ID') + ':'">
                       <span>{{ safeGet(props.row, 'dealerInput.txid', '') }}</span>
                     </el-form-item>
                     <el-form-item :label="($t('trace.txTime') || '区块链交易时间') + ':'">
                       <span>{{ formatDateTime(safeGet(props.row, 'dealerInput.timestamp', '')) }}</span>
+                    </el-form-item>
+                    <!-- 在四个环节中加入按行缓存的 IPFS hash 展示（raw_supplier / manufacturer / carrier / dealer） -->
+                    <!-- 经销商环节：放在 imgHash 之后、txid 之前 -->
+                    <el-form-item v-if="safeGet(props.row, '_fileHashesLoading', false)" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                      <span>{{ $t('common.uploading') || '正在加载...' }}</span>
+                    </el-form-item>
+                    <el-form-item v-else-if="safeGet(props.row, '_fileHashesError', '')" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                      <span style="color:#f56c6c;">{{ safeGet(props.row, '_fileHashesError', '') }}</span>
+                    </el-form-item>
+                    <el-form-item v-else-if="safeGet(props.row, '_fileHashesByRole.dealer', []).length" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                      <div>
+                        <div v-for="h in safeGet(props.row, '_fileHashesByRole.dealer', [])" :key="h" class="hash-row">
+                          <span class="hash-text">{{ h }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        </div>
+                      </div>
                     </el-form-item>
                   </el-form>
                 </el-collapse-item>
@@ -329,7 +410,14 @@ export default {
       activeOriginFilters: [],
       currentPage: 1,
       pageSize: 20,
-      total: 0
+      total: 0,
+      manifests: [],
+      fileHashesByRole: {
+        raw_supplier: [],
+        manufacturer: [],
+        carrier: [],
+        dealer: []
+      }
     }
   },
   computed: {
@@ -402,7 +490,9 @@ export default {
     } else {
       apiWrap(this, () => getIndustrialProductList(), (res) => {
         const raw = Array.isArray(res.data) ? res.data : []
-        this.tracedata = normalizeResults(raw)
+        // 初始界面不预加载 IPFS hash；展开时按需加载
+        this.applyNewResults(raw)
+        this.total = Array.isArray(raw) ? raw.length : 0
       }, '获取初始列表失败，请稍后重试')
     }
   },
@@ -417,16 +507,59 @@ export default {
     next()
   },
   methods: {
+    // 将后端返回的数据归一化为按 role 分组的 IPFS hash 列表
+    normalizeFileHashesByRole(data) {
+      // 1) 优先使用后端直接返回的 fileHashesByRole
+      const byRole = (data && typeof data === 'object' && data.fileHashesByRole && typeof data.fileHashesByRole === 'object') ? data.fileHashesByRole : null
+      if (byRole) {
+        return {
+          raw_supplier: Array.isArray(byRole.raw_supplier) ? byRole.raw_supplier : [],
+          manufacturer: Array.isArray(byRole.manufacturer) ? byRole.manufacturer : [],
+          carrier: Array.isArray(byRole.carrier) ? byRole.carrier : [],
+          dealer: Array.isArray(byRole.dealer) ? byRole.dealer : []
+        }
+      }
+
+      // 2) 兼容 data.manifests: [{role, hash, ...}, ...]
+      const manifests = (data && typeof data === 'object' && Array.isArray(data.manifests)) ? data.manifests : []
+      const acc = { raw_supplier: [], manufacturer: [], carrier: [], dealer: [] }
+      const seen = { raw_supplier: new Set(), manufacturer: new Set(), carrier: new Set(), dealer: new Set() }
+      manifests.forEach((m) => {
+        const role = m && m.role ? String(m.role) : ''
+        const hash = m && m.hash ? String(m.hash) : ''
+        if (!role || !hash) return
+        if (!acc[role]) return
+        if (seen[role].has(hash)) return
+        seen[role].add(hash)
+        acc[role].push(hash)
+      })
+      return acc
+    },
+
     onInputChange(val) {
       const v = sanitize(String(val || '').replace(/[^\d]/g, ''), LENGTHS.traceCode)
+      // v-model 已经会更新 traceCode，这里是为了强制只保留数字
       if (v !== this.traceCode) this.traceCode = v
+      // 手动删除到空时，也自动回到“获取所有”
+      if (!v) {
+        this.onInputClear()
+      }
+    },
+    onInputClear() {
+      // 只在确实清空后触发，避免误触发
+      if (this.traceCode) return
+      this.recentSelected = null
+      // 回到“获取所有产品信息”
+      this.allFruitInfo()
     },
     resetQuery() {
       this.traceCode = ''
       // keep current data until next successful fetch to avoid flicker
       this.tracedata = []
+      this.manifests = []
       this.recentSelected = null
       this.errorMessage = null
+      this.fileHashesByRole = { raw_supplier: [], manufacturer: [], carrier: [], dealer: [] }
     },
     loadRecent() {
       try {
@@ -468,9 +601,12 @@ export default {
     allFruitInfo() {
       const payload = { page: this.currentPage, pageSize: this.pageSize }
       apiWrap(this, () => getAllIndustrialProductInfo(payload), (res) => {
-        const raw = Array.isArray(res.data && res.data.items) ? res.data.items : (Array.isArray(res.data) ? res.data : [])
-        this.tracedata = normalizeResults(raw)
-        this.total = typeof res.data === 'object' && res.data && typeof res.data.total === 'number' ? res.data.total : raw.length
+        const raw = Array.isArray(res.data && res.data.items)
+          ? res.data.items
+          : (Array.isArray(res.data) ? res.data : [])
+        // 统一走 applyNewResults，避免重复
+        this.applyNewResults(raw)
+        this.total = (typeof res.data === 'object' && res.data && typeof res.data.total === 'number') ? res.data.total : raw.length
       }, '获取所有产品信息失败，请稍后重试')
     },
     fruitInfo() {
@@ -481,7 +617,16 @@ export default {
       }
       const payload = { traceabilityCode: code }
       apiWrap(this, () => getIndustrialProductInfo(payload), (res) => {
-        const item = res && res.data ? res.data : null
+        const data = res && res.data ? res.data : null
+        const product = data && typeof data === 'object' && data.product ? data.product : data
+
+        // ✅ 单码查询：解析 IPFS hash
+        this.fileHashesByRole = this.normalizeFileHashesByRole(data)
+
+        // manifests 不再展示
+        this.manifests = []
+
+        const item = product
         this.applyNewResults(item ? toList(item) : [])
         if (item) this.saveRecent(code)
       }, this.$t ? this.$t('error.fetchTraceFailed') : '查询接口请求失败，请稍后重试')
@@ -533,7 +678,13 @@ export default {
       // Element-UI 的 @expand-change 传 (row, expandedRows)
       const key = this.rowKey(row)
       const isOpen = Array.isArray(expandedRows) && expandedRows.some(r => this.rowKey(r) === key)
-      if (isOpen) this.expandedSet.add(key); else this.expandedSet.delete(key)
+      if (isOpen) {
+        this.expandedSet.add(key)
+        // ✅ 展开时按需加载
+        this.ensureRowFileHashes(row)
+      } else {
+        this.expandedSet.delete(key)
+      }
     },
     onSortChange({ prop, order }) {
       this.sortProp = prop
@@ -559,7 +710,37 @@ export default {
     },
     applyNewResults(arr) {
       const raw = Array.isArray(arr) ? arr : []
-      this.tracedata = normalizeResults(raw)
+      const normalized = normalizeResults(raw)
+
+      // 去重：按 traceabilityCode（主键）
+      const seen = new Set()
+      const deduped = []
+      for (const r of normalized) {
+        const key = r && r.traceabilityCode ? String(r.traceabilityCode) : ''
+        // 对缺少 key 的行做兜底：仍保留，但避免连续重复
+        if (!key) {
+          const last = deduped.length ? deduped[deduped.length - 1] : null
+          const lastStr = last ? JSON.stringify(last) : ''
+          const curStr = r ? JSON.stringify(r) : ''
+          if (curStr && curStr === lastStr) continue
+          deduped.push(r)
+          continue
+        }
+        if (seen.has(key)) continue
+        seen.add(key)
+        deduped.push(r)
+      }
+
+      // 在去重后的数组上清理/初始化按行缓存字段
+      this.tracedata = deduped.map((r) => {
+        if (r && typeof r === 'object') {
+          if (r._fileHashesByRole) delete r._fileHashesByRole
+          if (r._fileHashesLoading) delete r._fileHashesLoading
+          if (r._fileHashesError) delete r._fileHashesError
+        }
+        return r
+      })
+
       this.loading = false
       this.errorMessage = null
       this.expandedSet.clear()
@@ -598,6 +779,51 @@ export default {
       } catch (e) {
         window.open(url, '_blank', 'noopener,noreferrer')
       }
+    },
+    async copyText(text) {
+      try {
+        if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(String(text || ''))
+        } else {
+          const el = document.createElement('textarea')
+          el.value = String(text || '')
+          el.setAttribute('readonly', '')
+          el.style.position = 'absolute'
+          el.style.left = '-9999px'
+          document.body.appendChild(el)
+          el.select()
+          document.execCommand('copy')
+          document.body.removeChild(el)
+        }
+        this.$message && this.$message.success((this.$t && this.$t('common.copied')) || '已复制')
+      } catch (e) {
+        this.$message && this.$message.error((this.$t && this.$t('common.copyFailed')) || '复制失败')
+      }
+    },
+    ensureRowFileHashes(row) {
+      const code = row && row.traceabilityCode ? String(row.traceabilityCode) : ''
+      if (!code) return
+      // 缓存命中/请求中：不重复请求
+      if (row._fileHashesByRole && typeof row._fileHashesByRole === 'object') return
+      if (row._fileHashesLoading) return
+
+      this.$set(row, '_fileHashesLoading', true)
+      this.$set(row, '_fileHashesError', '')
+
+      // 仅用于加载 manifests 并聚合 hash；不改动产品主数据
+      getIndustrialProductInfo({ traceabilityCode: code })
+        .then((res) => {
+          const data = res && res.data ? res.data : null
+          const byRole = this.normalizeFileHashesByRole(data)
+          this.$set(row, '_fileHashesByRole', byRole)
+        })
+        .catch((e) => {
+          const msg = (e && e.message) ? e.message : '加载失败'
+          this.$set(row, '_fileHashesError', msg)
+        })
+        .finally(() => {
+          this.$set(row, '_fileHashesLoading', false)
+        })
     }
   },
   errorCaptured(err) {
@@ -705,4 +931,7 @@ export default {
 
 .image-placeholder { width:100px;height:100px;display:flex;align-items:center;justify-content:center;color:#909399;background:#f5f7fa; }
 .image-error { width:100px;height:100px;display:flex;align-items:center;justify-content:center;color:#f56c6c;background:#fff; }
+.hash-item { width: 100%; }
+.hash-text { font-family: monospace; word-break: break-all; }
+.hash-row { display:flex; align-items:center; gap: 8px; margin: 2px 0; }
 </style>

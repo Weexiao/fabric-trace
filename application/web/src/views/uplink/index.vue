@@ -247,15 +247,23 @@
         </el-upload>
         <div v-if="offchainFile" class="file-hint">{{ offchainFile.name }} ({{ formatSize(offchainFile.size) }})</div>
         <div class="file-actions">
-          <el-button
-            size="mini"
-            type="primary"
-            plain
-            :disabled="!offchainFile || offchainUploading || !canUploadOffchain"
-            :loading="offchainUploading"
-            @click="uploadOffchain"
-          >{{ $t('common.submit') || '提 交' }}</el-button>
+          <!-- 用 wrapper 接管点击：即使按钮 disabled，也能给出引导反馈 -->
+          <span class="offchain-submit-wrapper" @click="onOffchainSubmitClick">
+            <el-button
+              size="mini"
+              type="primary"
+              plain
+              :disabled="!offchainFile || offchainUploading || !canUploadOffchain"
+              :loading="offchainUploading"
+              @click.stop="uploadOffchain"
+            >{{ $t('common.submit') || '提 交' }}</el-button>
+          </span>
           <el-button size="mini" plain :disabled="!offchainFile || offchainUploading" @click="clearOffchainFile">{{ $t('common.reset') || '清 空' }}</el-button>
+
+          <!-- 引导：未生成溯源码时提示先上链提交 -->
+          <span v-if="offchainFile && !canUploadOffchain" class="offchain-guide">
+            {{ $t('common.offchainNeedTraceTip') || '请先提交上链生成溯源码后再上传附件' }}
+          </span>
         </div>
         <div class="file-tip">{{ $t('common.fileTip') || '文件将加密后存 IPFS，仅在链上存元数据。制造商可下载全部，其他角色仅可下载自己上传的文件。' }}</div>
       </div>
@@ -413,8 +421,8 @@ export default {
       return !!(this.txExplorer && this.successInfo.txid)
     },
     canUploadOffchain() {
-      // 必须有溯源码且非零售商
-      const codeOk = this.userType === '原料供应商' ? true : /^\d{18}$/.test((this.tracedata.traceabilityCode || '').trim())
+      // 必须有溯源码（18位）且非零售商
+      const codeOk = /^\d{18}$/.test((this.tracedata.traceabilityCode || '').trim())
       return codeOk && this.userType !== '零售商'
     }
   },
@@ -981,6 +989,8 @@ export default {
           // 统一：拦截器已处理非200为异常，此处即成功分支
           const code = res.traceabilityCode || (this.tracedata && this.tracedata.traceabilityCode)
           const txid = res.txid || res.txId || res.txID || ''
+          // 关键：回写溯源码到表单模型，链下上传按钮依赖它
+          if (code) this.tracedata.traceabilityCode = String(code)
           this.successInfo = { code, txid }
           this.successDialogVisible = true
           this.msgSuccess(this.$t('result.success', { txid: txid || '-', code }))
@@ -1176,24 +1186,59 @@ export default {
     clearOffchainFile() {
       this.offchainFile = null
     },
+    scrollToUplinkForm() {
+      // scroll to top of page where the on-chain form is
+      try {
+        const el = this.$el && this.$el.querySelector && this.$el.querySelector('.uplink-container')
+        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        else if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo({ top: 0, behavior: 'smooth' })
+      } catch (e) {
+        // ignore
+      }
+    },
+
     async uploadOffchain() {
       if (!this.offchainFile) return
       const rawCode = (this.tracedata.traceabilityCode || '').trim()
-      if (this.userType !== '原料供应商' && !/^\d{18}$/.test(rawCode)) {
-        this.msgError(this.$t('form.inputTraceCode'))
+      // 后端 /file/upload 强制要求 traceabilityCode，因此前端也统一要求 18 位
+      if (!/^\d{18}$/.test(rawCode)) {
+        const showConfirm = (this.$confirm && typeof this.$confirm === 'function')
+        if (showConfirm) {
+          try {
+            await this.$confirm(
+              this.$t('common.offchainNeedTraceTip') || '请先提交上链生成溯源码后再上传附件',
+              this.$t('common.tips') || '提示',
+              {
+                confirmButtonText: this.$t('common.goSubmit') || '去提交上链',
+                cancelButtonText: this.$t('common.cancel') || '取消',
+                type: 'warning'
+              }
+            )
+            this.scrollToUplinkForm()
+            // 若页面通过 query 参数锁定了溯源码输入，则允许用户手动编辑
+            if (this.traceCodeLocked) this.unlockTraceCode()
+          } catch (e) {
+            // cancel: do nothing
+          }
+        } else {
+          this.msgError(this.$t('common.offchainNeedTraceTip') || '请先提交上链生成溯源码后再上传附件')
+          this.scrollToUplinkForm()
+        }
         return
       }
+
       const code = rawCode
       this.tracedata.traceabilityCode = code
       this.offchainUploading = true
       const fd = new FormData()
-      if (code) fd.append('traceabilityCode', code)
+      fd.append('traceabilityCode', code)
       fd.append('file', this.offchainFile)
       try {
         const res = await uploadFile(fd)
         const payload = res && res.data !== undefined ? res.data : res
+        // code 已强制必填，此分支仅保留兼容
         if (!code && payload && payload.traceabilityCode) {
-          this.tracedata.traceabilityCode = payload.traceabilityCode
+          this.tracedata.traceabilityCode = payload.data.traceabilityCode
         }
         this.msgSuccess(this.$t('result.success') || '上传成功')
         this.clearOffchainFile()
@@ -1208,10 +1253,20 @@ export default {
     async downloadManifest(row) {
       try {
         const resp = await downloadFile(row.fileID)
-        const blobData = resp && resp.data !== undefined ? resp.data : resp
-        const blob = blobData instanceof Blob ? blobData : new Blob([blobData], { type: row.mime || 'application/octet-stream' })
-        const url = window.URL.createObjectURL(blob)
-        this.openDownload(url, row.fileID)
+        // downloadFile uses raw axios, so resp.data is the Blob
+        const blob = (resp && resp.data) ? resp.data : resp
+        const safeBlob = blob instanceof Blob ? blob : new Blob([blob], { type: row.mime || 'application/octet-stream' })
+
+        // try to get filename from Content-Disposition
+        let filename = row.fileID
+        const cd = resp && resp.headers && (resp.headers['content-disposition'] || resp.headers['Content-Disposition'])
+        if (cd) {
+          const m = String(cd).match(/filename="?([^";]+)"?/i)
+          if (m && m[1]) filename = decodeURIComponent(m[1])
+        }
+
+        const url = window.URL.createObjectURL(safeBlob)
+        this.openDownload(url, filename)
         window.URL.revokeObjectURL(url)
       } catch (e) {
         if (process.env.NODE_ENV !== 'production') console.error('download failed', e)
@@ -1229,6 +1284,14 @@ export default {
       return (...args) => {
         clearTimeout(timer)
         timer = setTimeout(() => fn.apply(this, args), wait)
+      }
+    },
+    onOffchainSubmitClick() {
+      // disabled 状态下 el-button 不会触发 click，为了避免“没反应”，这里统一给出引导
+      if (!this.offchainFile || this.offchainUploading) return
+      if (!this.canUploadOffchain) {
+        // 复用 uploadOffchain 的引导逻辑（会弹窗/提示并滚动）
+        this.uploadOffchain()
       }
     }
   }
@@ -1263,6 +1326,15 @@ export default {
 .file-hint { margin-top: 6px; color: #606266; }
 .file-actions { margin-top: 8px; display: flex; gap: 8px; }
 .file-tip { margin-top: 6px; color: #909399; font-size: 12px; }
+.offchain-guide {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 12px;
+  color: #f56c6c;
+}
+.offchain-submit-wrapper {
+  display: inline-flex;
+}
 @media (max-width: 767px) {
   .form-footer {
     text-align: center;

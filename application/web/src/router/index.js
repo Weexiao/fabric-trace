@@ -78,23 +78,11 @@ export const constantRoutes = [
     component: Layout,
     children: [
       {
-        path: 'http://192.168.1.12:8080',
+        path: 'http://119.45.247.29:8080',
         meta: { title: '区块链浏览器', icon: 'el-icon-discover' }
       }
     ]
   },
-  {
-    path: '/build',
-    component: Layout,
-    redirect: '/build',
-    children: [{
-      path: 'build',
-      name: 'Build',
-      component: () => import('@/views/build/index'),
-      meta: { title: '构建任意溯源系统', icon: 'el-icon-s-tools' }
-    }]
-  },
-
   // 404 page must be placed at the end !!!
   { path: '*', redirect: '/404', hidden: true }
 ]

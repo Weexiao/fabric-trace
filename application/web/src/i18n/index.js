@@ -30,7 +30,8 @@ const messages = {
       size: '大小',
       role: '角色',
       uploader: '上传者',
-      time: '时间'
+      time: '时间',
+      offchainNeedTraceTip: '请先提交上链生成溯源码后再上传附件'
     },
     actions: {
       copy: '复制',
@@ -198,7 +199,8 @@ const messages = {
         manufacturer: '制造商',
         logistics: '物流',
         dealer: '经销商'
-      }
+      },
+      ipfsHash: 'IPFS文件哈希'
     },
     error: {
       fetchTraceFailed: '查询接口请求失败，请稍后重试'

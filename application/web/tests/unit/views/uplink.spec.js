@@ -4,7 +4,8 @@ import ElementUI from 'element-ui'
 import Uplink from '@/views/uplink/index.vue'
 
 jest.mock('@/api/trace', () => ({
-  uplink: jest.fn(() => Promise.resolve({ code: 200, txid: 'TX123', traceability_code: '123456789012345678' }))
+  // component uses res.traceabilityCode
+  uplink: jest.fn(() => Promise.resolve({ code: 200, txid: 'TX123', traceabilityCode: '123456789012345678' }))
 }))
 
 const localVue = createLocalVue()
@@ -48,11 +49,11 @@ function mountUplink(userType = '制造商') {
 describe('Uplink view', () => {
   test('trace code validation requires 18 digits for manufacturer', async() => {
     const { wrapper } = mountUplink('制造商')
-    wrapper.setData({ tracedata: { ...wrapper.vm.tracedata, traceability_code: '123' }})
+    wrapper.setData({ tracedata: { ...wrapper.vm.tracedata, traceabilityCode: '123' }})
     await wrapper.vm.$nextTick()
     const res = await new Promise((resolve) => wrapper.vm.$refs.form.validate((v) => resolve(v)))
     expect(res).toBe(false)
-    wrapper.setData({ tracedata: { ...wrapper.vm.tracedata, traceability_code: '123456789012345678' }})
+    wrapper.setData({ tracedata: { ...wrapper.vm.tracedata, traceabilityCode: '123456789012345678' }})
     await wrapper.vm.$nextTick()
     const res2 = await new Promise((resolve) => wrapper.vm.$refs.form.validate((v) => resolve(v)))
     expect(res2).toBe(false) // still invalid until required fields filled
@@ -72,13 +73,13 @@ describe('Uplink view', () => {
     wrapper.setData({
       tracedata: {
         ...wrapper.vm.tracedata,
-        traceability_code: '123456789012345678',
-        Factory_input: {
-          Fac_productName: 'p',
-          Fac_productionbatch: 'b1',
-          Fac_productionTime: '2020-01-01 00:00:00',
-          Fac_factoryName: 'factory',
-          Fac_contactNumber: '+86 13312345678'
+        traceabilityCode: '123456789012345678',
+        manufacturerInput: {
+          productName: 'p',
+          productionBatch: 'b1',
+          factoryTime: '2020-01-01 00:00:00',
+          factoryNameAddress: 'factory',
+          contactPhone: '+86 13312345678'
         }
       }
     })
@@ -93,26 +94,71 @@ describe('Uplink view', () => {
     wrapper.setData({
       tracedata: {
         ...wrapper.vm.tracedata,
-        Factory_input: {
-          Fac_productName: 'p',
-          Fac_productionbatch: 'b1',
-          Fac_productionTime: '2020-01-01 00:00:00',
-          Fac_factoryName: 'factory',
-          Fac_contactNumber: '+86 13312345678'
+        manufacturerInput: {
+          productName: 'p',
+          productionBatch: 'b1',
+          factoryTime: '2020-01-01 00:00:00',
+          factoryNameAddress: 'factory',
+          contactPhone: '+86 13312345678'
         },
-        Driver_input: {
-          Dr_name: 'n', Dr_age: 30, Dr_phone: '+1 2222222', Dr_carNumber: 'ABC123', Dr_transport: 't'
+        carrierInput: {
+          name: 'n', age: 30, phone: '+1 2222222', plateNumber: 'ABC123', transportRecord: 't'
         }
       }
     })
-    // change role to 经销商
+
+    // simulate role change to 经销商 (component detects via lastUserType)
+    wrapper.vm.lastUserType = '制造商'
     wrapper.vm.$options.computed.userType.get = () => '经销商'
-    wrapper.vm.$forceUpdate()
+
+    // invoke the same reset behavior the component uses when role changes
+    wrapper.vm.resetBranchData('经销商')
     await wrapper.vm.$nextTick()
-    // trigger watch
-    wrapper.vm.userType
-    await wrapper.vm.$nextTick()
-    expect(wrapper.vm.tracedata.Driver_input.Dr_name).toBe('')
-    expect(wrapper.vm.tracedata.Factory_input.Fac_productName).toBe('')
+
+    expect(wrapper.vm.tracedata.carrierInput.name).toBe('')
+    expect(wrapper.vm.tracedata.manufacturerInput.productName).toBe('')
+  })
+
+  test('offchain upload without trace code shows confirm and scrolls to uplink form on confirm', async() => {
+    const { wrapper } = mountUplink('制造商')
+
+    // arrange: pick a file but no traceabilityCode
+    wrapper.setData({ offchainFile: { name: 'a.txt', size: 1 }})
+
+    const confirmMock = jest.fn(() => Promise.resolve())
+    wrapper.vm.$confirm = confirmMock
+
+    const scrollMock = jest.fn()
+    wrapper.vm.scrollToUplinkForm = scrollMock
+
+    await wrapper.vm.uploadOffchain()
+
+    expect(confirmMock).toHaveBeenCalled()
+    expect(scrollMock).toHaveBeenCalled()
+  })
+
+  test('after uplink success, traceabilityCode is written back enabling offchain upload', async() => {
+    const { wrapper } = mountUplink('制造商')
+
+    wrapper.setData({
+      tracedata: {
+        ...wrapper.vm.tracedata,
+        // 制造商提交前校验要求 18 位溯源码，因此这里先给一个有效值
+        traceabilityCode: '123456789012345678',
+        manufacturerInput: {
+          productName: 'p',
+          productionBatch: 'b1',
+          factoryTime: '2020-01-01 00:00:00',
+          factoryNameAddress: 'factory',
+          contactPhone: '+86 13312345678'
+        }
+      },
+      offchainFile: { name: 'a.txt', size: 1 }
+    })
+
+    await wrapper.vm.submittracedata()
+
+    expect(wrapper.vm.tracedata.traceabilityCode).toBe('123456789012345678')
+    expect(wrapper.vm.canUploadOffchain).toBe(true)
   })
 })

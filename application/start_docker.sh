@@ -8,7 +8,12 @@ cp -r ../blockchain/network/organizations backend/blockchain/network/organizatio
 docker build -t fabric-trace-app .
 echo "容器ID："
 # 运行 Docker 容器
-docker run -d -p 9090:9090 --name fabric-trace-app fabric-trace-app
+# 若宿主机设置了 CRYPTO_KEY（32 字节），则透传到容器供链下加密使用
+if [ -n "$CRYPTO_KEY" ]; then
+  docker run -d -p 9090:9090 -e CRYPTO_KEY="$CRYPTO_KEY" --name fabric-trace-app fabric-trace-app
+else
+  docker run -d -p 9090:9090 --name fabric-trace-app fabric-trace-app
+fi
 # 检查容器是否启动成功
 if docker ps | grep -q fabric-trace-app; then
     echo "系统已成功运行！ 在浏览器上打开服务器IP：9090 即可查看"

@@ -1,4 +1,6 @@
 import request from '@/utils/request'
+import axios from 'axios'
+import { getToken } from '@/utils/auth'
 
 export function uploadFile(formData) {
   return request({
@@ -20,10 +22,14 @@ export function listManifests(traceabilityCode) {
 }
 
 export function downloadFile(fileID) {
-  return request({
-    url: `/file/download/${fileID}`,
+  // Blob download is not JSON and doesn't contain {code:200}; bypass the JSON interceptor.
+  return axios({
+    url: `${process.env.VUE_APP_BASE_API}/file/download/${fileID}`,
     method: 'get',
-    responseType: 'blob'
+    responseType: 'blob',
+    headers: {
+      Authorization: getToken()
+    },
+    timeout: 60000
   })
 }
-

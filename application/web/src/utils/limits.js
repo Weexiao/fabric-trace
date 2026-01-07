@@ -2,7 +2,7 @@
 // Adjust here to tune lengths consistently across the app
 
 export const LENGTHS = {
-  traceCode: 18,
+  traceCode: 19,
   farmer: {
     fruitName: 100,
     origin: 100,

@@ -21,16 +21,49 @@ func NewService() (*Service, error) {
 	if cfg.Storage.Type != "ipfs" {
 		return nil, fmt.Errorf("unsupported storage type %s", cfg.Storage.Type)
 	}
-	key, err := LoadAESKey(cfg.Crypto.KeyEnv)
-	if err != nil {
-		return nil, err
+
+	var key []byte
+	if cfg.Crypto.Enabled {
+		k, err := LoadAESKey(cfg.Crypto.KeyEnv)
+		if err != nil {
+			return nil, err
+		}
+		key = k
 	}
+
+	if cfg.Storage.IPFS.APIURL == "" {
+		return nil, fmt.Errorf("ipfs api_url is empty")
+	}
+
 	ipfs := NewIPFSClient(cfg.Storage.IPFS.APIURL, cfg.Storage.MaxSizeMB*1024*1024)
 	return &Service{ipfs: ipfs, key: key}, nil
 }
 
 // Upload encrypts, uploads to IPFS, and returns manifest fields.
 func (s *Service) Upload(ctx context.Context, traceID, fileID, mime string, r io.Reader) (*Manifest, error) {
+	if !settings.Cfg.Crypto.Enabled {
+		// No encryption: store plaintext directly
+		plain, err := io.ReadAll(r)
+		if err != nil {
+			return nil, err
+		}
+		cid, size, _, err := s.ipfs.Put(ctx, bytes.NewReader(plain), int64(len(plain)))
+		if err != nil {
+			return nil, err
+		}
+		m := &Manifest{
+			TraceabilityCode: traceID,
+			FileID:           fileID,
+			CID:              cid,
+			Hash:             pkg.SHA256Hex(plain),
+			Mime:             mime,
+			Size:             size,
+			Encrypted:        false,
+			KeyVersion:       "",
+		}
+		return m, nil
+	}
+
 	encRes, err := pkg.EncryptAndHash(r, s.key)
 	if err != nil {
 		return nil, err
@@ -59,7 +92,7 @@ func (s *Service) Download(ctx context.Context, manifest Manifest) (io.ReadClose
 		return nil, 0, err
 	}
 	data, err := io.ReadAll(rc)
-	rc.Close()
+	_ = rc.Close()
 	if err != nil {
 		return nil, 0, err
 	}
@@ -69,6 +102,12 @@ func (s *Service) Download(ctx context.Context, manifest Manifest) (io.ReadClose
 			return nil, 0, fmt.Errorf("hash mismatch: expected %s got %s", manifest.Hash, hashHex)
 		}
 	}
+
+	if !manifest.Encrypted || !settings.Cfg.Crypto.Enabled {
+		// no encryption
+		return io.NopCloser(bytes.NewReader(data)), sizeCipher, nil
+	}
+
 	dec, err := pkg.DecryptReader(bytes.NewReader(data), s.key)
 	if err != nil {
 		return nil, 0, err
