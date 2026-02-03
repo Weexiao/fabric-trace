@@ -71,8 +71,14 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// 获取用户动态属性
+	dynamicAttributes, err := pkg.GetUserDynamicAttributes(user.UserID)
+	if err != nil {
+		dynamicAttributes = "{}"
+	}
+
 	// 生成jwt
-	jwt, err := pkg.GenToken(user.UserID, userType)
+	jwt, err := pkg.GenToken(user.UserID, userType, dynamicAttributes)
 	if err != nil {
 		c.JSON(200, gin.H{
 			"message": "login failed:" + err.Error(),
@@ -125,10 +131,74 @@ func GetInfo(c *gin.Context) {
 		})
 	}
 
+	// 获取用户动态属性
+	dynamicAttributes, err := pkg.GetUserDynamicAttributes(userID.(string))
+	if err != nil {
+		dynamicAttributes = "{}"
+	}
+
 	c.JSON(200, gin.H{
-		"code":     200,
-		"message":  "get user type success",
-		"userType": userType,
-		"username": username,
+		"code":              200,
+		"message":           "get user type success",
+		"userType":          userType,
+		"username":          username,
+		"dynamicAttributes": dynamicAttributes,
+	})
+}
+
+// 更新用户动态属性 (管理员操作)
+func UpdateUserDynamicAttributes(c *gin.Context) {
+	userID := c.PostForm("user_id")
+	dynamicAttributes := c.PostForm("dynamic_attributes") // JSON string like {"region":"Sichuan","data_level":"Internal"}
+
+	if userID == "" || dynamicAttributes == "" {
+		c.JSON(200, gin.H{
+			"code":    400,
+			"message": "user_id and dynamic_attributes are required",
+		})
+		return
+	}
+
+	err := pkg.UpdateUserDynamicAttributes(userID, dynamicAttributes)
+	if err != nil {
+		c.JSON(200, gin.H{
+			"code":    500,
+			"message": "update failed:" + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"code":    200,
+		"message": "update success",
+	})
+}
+
+// 获取所有用户列表 (管理员操作)
+func GetAllUsers(c *gin.Context) {
+	users, err := pkg.GetAllUsers()
+	if err != nil {
+		c.JSON(200, gin.H{
+			"code":    500,
+			"message": "get users failed:" + err.Error(),
+		})
+		return
+	}
+
+	// 为每个用户添加用户类型（从区块链获取）
+	for _, user := range users {
+		userType, err := GetUserType(user.UserID)
+		if err != nil {
+			// 如果获取失败，设置为空或默认值
+			user.UserType = "Unknown"
+		} else {
+			user.UserType = userType
+		}
+	}
+
+	c.JSON(200, gin.H{
+		"code":    200,
+		"message": "get users success",
+		"data":    users,
 	})
 }

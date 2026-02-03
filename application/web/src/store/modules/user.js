@@ -7,7 +7,8 @@ const getDefaultState = () => {
     token: getToken(),
     name: '',
     avatar: '',
-    userType: ''
+    userType: '',
+    dynamicAttributes: {}
   }
 }
 
@@ -16,6 +17,8 @@ const state = getDefaultState()
 const mutations = {
   RESET_STATE: (state) => {
     Object.assign(state, getDefaultState())
+    // 清除 localStorage 中的 userType
+    localStorage.removeItem('userType')
   },
   SET_TOKEN: (state, token) => {
     state.token = token
@@ -25,9 +28,14 @@ const mutations = {
   },
   SET_USERTYPE: (state, userType) => {
     state.userType = userType
+    // 保存到 localStorage，供路由重定向使用
+    localStorage.setItem('userType', userType)
   },
   SET_AVATAR: (state, avatar) => {
     state.avatar = avatar
+  },
+  SET_DYNAMIC_ATTRIBUTES: (state, dynamicAttributes) => {
+    state.dynamicAttributes = dynamicAttributes
   }
 }
 
@@ -71,6 +79,7 @@ const actions = {
       getInfo(state.token).then(response => {
         const { username } = response
         const { userType } = response
+        const { dynamicAttributes } = response
 
         if (!username) {
           return reject('Verification failed, please Login again.')
@@ -78,6 +87,9 @@ const actions = {
 
         commit('SET_NAME', username)
         commit('SET_USERTYPE', userType)
+        // Parse JSON string to object if needed
+        const attrs = typeof dynamicAttributes === 'string' ? JSON.parse(dynamicAttributes || '{}') : (dynamicAttributes || {})
+        commit('SET_DYNAMIC_ATTRIBUTES', attrs)
         resolve(response)
       }).catch(error => {
         reject(error)

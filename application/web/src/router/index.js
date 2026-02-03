@@ -51,7 +51,11 @@ export const constantRoutes = [
       path: 'uplink',
       name: 'Uplink',
       component: () => import('@/views/uplink/index'),
-      meta: { title: '溯源信息录入', icon: 'el-icon-edit-outline' }
+      meta: {
+        title: '溯源信息录入',
+        icon: 'el-icon-edit-outline',
+        roles: ['原料供应商', '制造商', '物流承运商', '经销商'] // 排除 Admin
+      }
     }]
   },
   {
@@ -72,6 +76,52 @@ export const constantRoutes = [
         hidden: true
       }
     ]
+  },
+  // 动态属性权限控制示例页面
+  {
+    path: '/attribute-demo',
+    component: Layout,
+    meta: { title: '权限演示', icon: 'el-icon-key' },
+    children: [
+      {
+        path: '',
+        name: 'AttributeDemo',
+        component: () => import('@/views/attribute-demo/index.vue'),
+        meta: { title: '权限演示中心' }
+      },
+      {
+        path: 'orders-region',
+        name: 'OrdersRegion',
+        component: () => import('@/views/orders-region/index.vue'),
+        meta: {
+          title: '订单管理（地域限制）',
+          requiredAttributes: { region: 'Sichuan' }
+        }
+      },
+      {
+        path: 'financial-reports',
+        name: 'FinancialReports',
+        component: () => import('@/views/financial-reports/index.vue'),
+        meta: {
+          title: '财务报表（数据级别限制）',
+          requiredAttributes: { data_level: 'Internal' }
+        }
+      }
+    ]
+  },
+  {
+    path: '/user-management',
+    component: Layout,
+    children: [{
+      path: '',
+      name: 'UserManagement',
+      component: () => import('@/views/user-management/index.vue'),
+      meta: {
+        title: '用户管理',
+        icon: 'el-icon-user',
+        roles: ['Admin'] // 只有 Admin 可以访问
+      }
+    }]
   },
   {
     path: 'external-link',

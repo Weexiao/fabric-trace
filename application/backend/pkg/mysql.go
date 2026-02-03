@@ -26,7 +26,7 @@ func MysqlInit() (err error) {
 	// 创建数据库与表（如果不存在的话）
 	db.Exec("CREATE DATABASE IF NOT EXISTS " + viper.GetString("mysql.db"))
 	db.Exec("USE " + viper.GetString("mysql.db"))
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS users (user_id VARCHAR(50) PRIMARY KEY, username VARCHAR(50) UNIQUE NOT NULL, password VARCHAR(50) NOT NULL, realInfo VARCHAR(100))")
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS users (user_id VARCHAR(50) PRIMARY KEY, username VARCHAR(50) UNIQUE NOT NULL, password VARCHAR(50) NOT NULL, realInfo VARCHAR(100), dynamic_attributes JSON)")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -55,8 +55,12 @@ func InsertUser(user *model.MysqlUser) (err error) {
 	if count > 0 {
 		return errors.New("用户名已存在")
 	}
-	sqlStr = "insert into users(user_id,username,password,realInfo) values(?,?,?,?)"
-	_, err = db.Exec(sqlStr, user.UserID, user.Username, EncryptByMD5(user.Password), EncryptByMD5(user.RealInfo))
+	sqlStr = "insert into users(user_id,username,password,realInfo,dynamic_attributes) values(?,?,?,?,?)"
+	attrs := "{}"
+	if user.DynamicAttributes.Valid {
+		attrs = user.DynamicAttributes.String
+	}
+	_, err = db.Exec(sqlStr, user.UserID, user.Username, EncryptByMD5(user.Password), EncryptByMD5(user.RealInfo), attrs)
 	if err != nil {
 		return err
 	}
@@ -95,4 +99,45 @@ func GetUsername(userID string) (username string, err error) {
 		return "", err
 	}
 	return username, nil
+}
+
+// 获取用户动态属性
+func GetUserDynamicAttributes(userID string) (attrs string, err error) {
+	sqlStr := "select IFNULL(dynamic_attributes, '{}') from users where user_id = ?"
+	err = db.QueryRow(sqlStr, userID).Scan(&attrs)
+	if err != nil {
+		return "{}", err
+	}
+	return attrs, nil
+}
+
+// 更新用户动态属性
+func UpdateUserDynamicAttributes(userID string, dynamicAttributes string) (err error) {
+	sqlStr := "update users set dynamic_attributes = ? where user_id = ?"
+	_, err = db.Exec(sqlStr, dynamicAttributes, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// 获取所有用户
+func GetAllUsers() ([]*model.MysqlUser, error) {
+	var users []*model.MysqlUser
+	sqlStr := "select user_id, username, IFNULL(dynamic_attributes, '{}') from users"
+	rows, err := db.Query(sqlStr)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		user := &model.MysqlUser{}
+		err = rows.Scan(&user.UserID, &user.Username, &user.DynamicAttributes)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
 }

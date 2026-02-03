@@ -8,8 +8,9 @@ import (
 )
 
 type Myclaims struct {
-	UserID   string `json:"userID"`
-	UserType string `json:"userType"`
+	UserID            string `json:"userID"`
+	UserType          string `json:"userType"`
+	DynamicAttributes string `json:"dynamicAttributes"` // JSON string
 	jwt.StandardClaims
 }
 
@@ -17,10 +18,11 @@ const TokenExpireDuration = time.Hour * 48
 
 var MySecret = []byte(viper.GetString("jwt.secret"))
 
-func GenToken(userID string, userType string) (string, error) {
+func GenToken(userID string, userType string, dynamicAttributes string) (string, error) {
 	c := Myclaims{
-		UserID:   userID,
-		UserType: userType,
+		UserID:            userID,
+		UserType:          userType,
+		DynamicAttributes: dynamicAttributes,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(TokenExpireDuration).Unix(),
 			Issuer:    viper.GetString("jwt.issuer"),

@@ -5,6 +5,7 @@ import NProgress from 'nprogress' // progress bar
 import 'nprogress/nprogress.css' // progress bar style
 import { getToken } from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
+import { hasPermission } from '@/utils/checkPermission' // dynamic attribute permission checker
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
@@ -29,11 +30,64 @@ router.beforeEach(async(to, from, next) => {
     } else {
       const hasGetUserInfo = store.getters.name
       if (hasGetUserInfo) {
+        // 检查角色权限
+        if (to.meta.roles && to.meta.roles.length > 0) {
+          const userRole = store.getters.userType
+          if (!to.meta.roles.includes(userRole)) {
+            Message.error('你没有权限访问此页面（角色不符）')
+            NProgress.done()
+            return
+          }
+        }
+
+        // 检查动态属性权限（Admin 用户豁免）
+        if (to.meta.requiredAttributes) {
+          const userRole = store.getters.userType
+          // Admin 用户跳过属性检查
+          if (userRole !== 'Admin') {
+            const user = {
+              userType: store.getters.userType,
+              dynamicAttributes: store.getters.dynamicAttributes || {}
+            }
+            if (!hasPermission(user, { requiredAttributes: to.meta.requiredAttributes })) {
+              Message.error('你没有权限访问此资源（属性不匹配）')
+              NProgress.done()
+              return
+            }
+          }
+        }
         next()
       } else {
         try {
           // get user info
           await store.dispatch('user/getInfo')
+
+          // 检查角色权限
+          if (to.meta.roles && to.meta.roles.length > 0) {
+            const userRole = store.getters.userType
+            if (!to.meta.roles.includes(userRole)) {
+              Message.error('你没有权限访问此页面（角色不符）')
+              NProgress.done()
+              return
+            }
+          }
+
+          // 检查动态属性权限（Admin 用户豁免）
+          if (to.meta.requiredAttributes) {
+            const userRole = store.getters.userType
+            // Admin 用户跳过属性检查
+            if (userRole !== 'Admin') {
+              const user = {
+                userType: store.getters.userType,
+                dynamicAttributes: store.getters.dynamicAttributes || {}
+              }
+              if (!hasPermission(user, { requiredAttributes: to.meta.requiredAttributes })) {
+                Message.error('你没有权限访问此资源（属性不匹配）')
+                NProgress.done()
+                return
+              }
+            }
+          }
           next()
         } catch (error) {
           // remove token and go to login page to re-login

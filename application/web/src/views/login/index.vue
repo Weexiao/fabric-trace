@@ -187,6 +187,9 @@ export default {
         userType: ''
       },
       options: [{
+        value: 'Admin',
+        label: '超级管理员'
+      }, {
         value: '原料供应商',
         label: this.$t('login.roles.farmer')
       }, {
@@ -283,11 +286,11 @@ export default {
         })
         this.loading = true
         this.$store.dispatch('user/register', this.registerForm).then(response => {
-          this.$router.push({ path: this.redirect || '/' })
           this.$message({
-            message: '注册成功，链上交易ID：' + response.data.txid,
+            message: '注册成功，链上交易ID：' + (response.txid || response.data?.txid || ''),
             type: 'success'
           })
+          this.$router.push({ path: this.redirect || '/' })
           // 注册成功后清空注册表单
           this.registerForm = { username: '', password: '', password2: '', userType: '' }
           // 重置密码可见性并切回登录页

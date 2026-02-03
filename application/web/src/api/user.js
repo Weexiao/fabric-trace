@@ -39,3 +39,22 @@ export function logout() {
     method: 'post'
   })
 }
+
+export function updateUserDynamicAttributes(data) {
+  return request({
+    url: '/updateUserDynamicAttributes',
+    method: 'post',
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+    data
+  })
+}
+
+export function getAllUsers() {
+  return request({
+    url: '/getAllUsers',
+    method: 'post'
+  })
+}
+

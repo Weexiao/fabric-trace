@@ -42,6 +42,10 @@ func SetupRouter() *gin.Engine {
 	r.POST("/logout", con.Logout)
 	//查询用户的类型
 	r.POST("/getInfo", middleware.JWTAuthMiddleware(), con.GetInfo)
+	// 更新用户动态属性 (管理员操作)
+	r.POST("/updateUserDynamicAttributes", middleware.JWTAuthMiddleware(), con.UpdateUserDynamicAttributes)
+	// 获取所有用户列表 (管理员操作)
+	r.POST("/getAllUsers", middleware.JWTAuthMiddleware(), con.GetAllUsers)
 	//工业产品上链
 	r.POST("/uplink", middleware.JWTAuthMiddleware(), con.Uplink)
 	// 获取工业产品的上链信息
