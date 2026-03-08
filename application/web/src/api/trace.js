@@ -60,3 +60,28 @@ export function getIndustrialProductHistory(data) {
     data
   })
 }
+
+// 压缩上链：前端 Gzip+Base64 压缩后以 JSON 传输
+export function uplinkCompressed(data) {
+  return request({
+    url: '/uplink/compressed',
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data
+  })
+}
+
+// 压缩测试接口（调试用）
+export function compressTest(data) {
+  return request({
+    url: '/compress/test',
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data
+  })
+}
+

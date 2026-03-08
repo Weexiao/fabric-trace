@@ -292,7 +292,8 @@
 <script>
 import SuccessDialog from '@/components/SuccessDialog.vue'
 import { mapGetters } from 'vuex'
-import { uplink } from '@/api/trace'
+import { uplink, uplinkCompressed } from '@/api/trace'
+import { compressPayload } from '@/utils/compress'
 import { regionData as regionOptions } from 'element-china-area-data'
 import placeholders from '@/utils/placeholders'
 import { createObjectURLSafe, revokeObjectURLSafe, revokeAllObjectURLs } from '@/utils/blob'
@@ -984,8 +985,37 @@ export default {
           background: 'rgba(0, 0, 0, 0.7)'
         })
         try {
-          const formData = this.buildFormData()
-          const res = await uplink(formData)
+          let res
+          // 压缩上链：无图片时优先走 Gzip+Base64 JSON 传输，减少网络开销
+          if (!this.imageFile) {
+            try {
+              const cfg = this.getFormArgConfig()
+              const getters = cfg[this.userType] || []
+              const argsObj = {}
+              getters.forEach((getter, idx) => {
+                argsObj[`arg${idx + 1}`] = sanitize(getter(this.tracedata), 200)
+              })
+              const { compressedB64, originalSize, compressedSize } = compressPayload(argsObj)
+              if (process.env.NODE_ENV !== 'production') {
+                console.log(`[压缩上链] 原始=${originalSize}B, 压缩=${compressedSize}B, 压缩率=${(compressedSize / originalSize * 100).toFixed(1)}%`)
+              }
+              res = await uplinkCompressed({
+                compressedPayload: compressedB64,
+                traceabilityCode: this.tracedata.traceabilityCode || ''
+              })
+            } catch (compressErr) {
+              // 压缩失败时降级为传统 multipart 上传
+              if (process.env.NODE_ENV !== 'production') {
+                console.warn('[压缩上链] 降级为传统上传:', compressErr)
+              }
+              const formData = this.buildFormData()
+              res = await uplink(formData)
+            }
+          } else {
+            // 有图片时走传统 multipart 上传（图片二进制不适合 JSON 内嵌）
+            const formData = this.buildFormData()
+            res = await uplink(formData)
+          }
           // 统一：拦截器已处理非200为异常，此处即成功分支
           const code = res.traceabilityCode || (this.tracedata && this.tracedata.traceabilityCode)
           const txid = res.txid || res.txId || res.txID || ''

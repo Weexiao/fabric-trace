@@ -33,3 +33,9 @@ crypto:
   enabled: false
   key_version: "v1"
   key_env: "CRYPTO_KEY"
+
+compression:
+  enabled: true
+  algorithm: "gzip"
+  model_path: ""
+

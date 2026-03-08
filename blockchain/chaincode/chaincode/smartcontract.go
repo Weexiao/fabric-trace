@@ -36,7 +36,17 @@ func (s *SmartContract) RegisterUser(ctx contractapi.TransactionContextInterface
 }
 
 // 工业产品上链，传入用户ID、工业产品上链信息
-func (s *SmartContract) Uplink(ctx contractapi.TransactionContextInterface, userID string, traceabilityCode string, arg1 string, arg2 string, arg3 string, arg4 string, arg5 string, arg6 string) (string, error) {
+// arg7 为可选的压缩证据 JSON（CompressionEvidence），为空时表示未压缩
+func (s *SmartContract) Uplink(ctx contractapi.TransactionContextInterface, userID string, traceabilityCode string, arg1 string, arg2 string, arg3 string, arg4 string, arg5 string, arg6 string, arg7 string) (string, error) {
+	// 解析压缩证据（可选）
+	var compEvidence *CompressionEvidence
+	if arg7 != "" {
+		compEvidence = &CompressionEvidence{}
+		if err := json.Unmarshal([]byte(arg7), compEvidence); err != nil {
+			return "", fmt.Errorf("failed to unmarshal compression evidence: %v", err)
+		}
+	}
+
 	// 获取用户类型
 	userType, err := s.GetUserType(ctx, userID)
 	if err != nil {
@@ -82,6 +92,7 @@ func (s *SmartContract) Uplink(ctx contractapi.TransactionContextInterface, user
 		product.RawSupplierInput.Img = arg6
 		product.RawSupplierInput.Txid = txid
 		product.RawSupplierInput.Timestamp = txTimeStr
+		product.RawSupplierInput.CompressionEvidence = compEvidence
 	// 制造商
 	case "制造商":
 		product.ManufacturerInput.ProductName = arg1
@@ -92,6 +103,7 @@ func (s *SmartContract) Uplink(ctx contractapi.TransactionContextInterface, user
 		product.ManufacturerInput.Img = arg6
 		product.ManufacturerInput.Txid = txid
 		product.ManufacturerInput.Timestamp = txTimeStr
+		product.ManufacturerInput.CompressionEvidence = compEvidence
 	// 物流承运商
 	case "物流承运商":
 		product.CarrierInput.Name = arg1
@@ -102,6 +114,7 @@ func (s *SmartContract) Uplink(ctx contractapi.TransactionContextInterface, user
 		product.CarrierInput.Img = arg6
 		product.CarrierInput.Txid = txid
 		product.CarrierInput.Timestamp = txTimeStr
+		product.CarrierInput.CompressionEvidence = compEvidence
 	// 经销商
 	case "经销商":
 		product.DealerInput.StoreTime = arg1
@@ -112,6 +125,7 @@ func (s *SmartContract) Uplink(ctx contractapi.TransactionContextInterface, user
 		product.DealerInput.Img = arg6
 		product.DealerInput.Txid = txid
 		product.DealerInput.Timestamp = txTimeStr
+		product.DealerInput.CompressionEvidence = compEvidence
 
 	}
 

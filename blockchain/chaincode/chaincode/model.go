@@ -48,14 +48,15 @@ type HistoryQueryResult struct {
 原料供应商名称
 */
 type RawSupplierInput struct {
-	ProductName    string `json:"productName"`
-	RawOrigin      string `json:"rawOrigin"`
-	ArrivalTime    string `json:"arrivalTime"`
-	ProductionTime string `json:"productionTime"`
-	SupplierName   string `json:"supplierName"`
-	Img            string `json:"img"`
-	Txid           string `json:"txid"`
-	Timestamp      string `json:"timestamp"`
+	ProductName         string               `json:"productName"`
+	RawOrigin           string               `json:"rawOrigin"`
+	ArrivalTime         string               `json:"arrivalTime"`
+	ProductionTime      string               `json:"productionTime"`
+	SupplierName        string               `json:"supplierName"`
+	Img                 string               `json:"img"`
+	Txid                string               `json:"txid"`
+	Timestamp           string               `json:"timestamp"`
+	CompressionEvidence *CompressionEvidence `json:"compressionEvidence,omitempty"`
 }
 
 /*
@@ -67,14 +68,15 @@ type RawSupplierInput struct {
 联系电话
 */
 type ManufacturerInput struct {
-	ProductName        string `json:"productName"`
-	ProductionBatch    string `json:"productionBatch"`
-	FactoryTime        string `json:"factoryTime"`
-	FactoryNameAddress string `json:"factoryNameAddress"`
-	ContactPhone       string `json:"contactPhone"`
-	Img                string `json:"img"`
-	Txid               string `json:"txid"`
-	Timestamp          string `json:"timestamp"`
+	ProductName         string               `json:"productName"`
+	ProductionBatch     string               `json:"productionBatch"`
+	FactoryTime         string               `json:"factoryTime"`
+	FactoryNameAddress  string               `json:"factoryNameAddress"`
+	ContactPhone        string               `json:"contactPhone"`
+	Img                 string               `json:"img"`
+	Txid                string               `json:"txid"`
+	Timestamp           string               `json:"timestamp"`
+	CompressionEvidence *CompressionEvidence `json:"compressionEvidence,omitempty"`
 }
 
 /*
@@ -86,14 +88,15 @@ type ManufacturerInput struct {
 运输记录
 */
 type CarrierInput struct {
-	Name            string `json:"name"`
-	Age             string `json:"age"`
-	Phone           string `json:"phone"`
-	PlateNumber     string `json:"plateNumber"`
-	TransportRecord string `json:"transportRecord"`
-	Img             string `json:"img"`
-	Txid            string `json:"txid"`
-	Timestamp       string `json:"timestamp"`
+	Name                string               `json:"name"`
+	Age                 string               `json:"age"`
+	Phone               string               `json:"phone"`
+	PlateNumber         string               `json:"plateNumber"`
+	TransportRecord     string               `json:"transportRecord"`
+	Img                 string               `json:"img"`
+	Txid                string               `json:"txid"`
+	Timestamp           string               `json:"timestamp"`
+	CompressionEvidence *CompressionEvidence `json:"compressionEvidence,omitempty"`
 }
 
 /*
@@ -105,14 +108,28 @@ type CarrierInput struct {
 经销商电话
 */
 type DealerInput struct {
-	StoreTime      string `json:"storeTime"`
-	SellTime       string `json:"sellTime"`
-	DealerName     string `json:"dealerName"`
-	DealerLocation string `json:"dealerLocation"`
-	DealerPhone    string `json:"dealerPhone"`
-	Img            string `json:"img"`
-	Txid           string `json:"txid"`
-	Timestamp      string `json:"timestamp"`
+	StoreTime           string               `json:"storeTime"`
+	SellTime            string               `json:"sellTime"`
+	DealerName          string               `json:"dealerName"`
+	DealerLocation      string               `json:"dealerLocation"`
+	DealerPhone         string               `json:"dealerPhone"`
+	Img                 string               `json:"img"`
+	Txid                string               `json:"txid"`
+	Timestamp           string               `json:"timestamp"`
+	CompressionEvidence *CompressionEvidence `json:"compressionEvidence,omitempty"`
+}
+
+// CompressionEvidence 记录数据压缩的防篡改证据。
+// 链上节点可通过 OriginalHash 与 CompressedHash 独立验证数据完整性。
+// FeatureVector 为 BTAE 深度学习压缩模型预留，存储潜空间的定长特征摘要。
+type CompressionEvidence struct {
+	Algorithm        string    `json:"algorithm"`               // 压缩算法: "gzip", "btae"
+	OriginalHash     string    `json:"originalHash"`            // 原始数据 SHA-256
+	CompressedHash   string    `json:"compressedHash"`          // 压缩后 SHA-256
+	OriginalSize     int64     `json:"originalSize"`            // 原始字节数
+	CompressedSize   int64     `json:"compressedSize"`          // 压缩后字节数
+	CompressionRatio float64   `json:"compressionRatio"`        // 压缩率
+	FeatureVector    []float64 `json:"featureVector,omitempty"` // BTAE 潜空间特征向量（预留）
 }
 
 // FileRole defines who uploaded/owns a file for role-based permissions.

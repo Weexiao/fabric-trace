@@ -20,9 +20,16 @@ type CryptoConfig struct {
 	KeyEnv     string
 }
 
+type CompressionConfig struct {
+	Enabled   bool   // 是否启用压缩上链
+	Algorithm string // 压缩算法: "gzip" (默认), "btae"
+	ModelPath string // BTAE 模型路径（预留）
+}
+
 type Config struct {
-	Storage StorageConfig
-	Crypto  CryptoConfig
+	Storage     StorageConfig
+	Crypto      CryptoConfig
+	Compression CompressionConfig
 }
 
 var Cfg Config
@@ -43,6 +50,13 @@ func Init() (err error) {
 	Cfg.Crypto.Enabled = viper.GetBool("crypto.enabled")
 	Cfg.Crypto.KeyVersion = viper.GetString("crypto.key_version")
 	Cfg.Crypto.KeyEnv = viper.GetString("crypto.key_env")
+
+	Cfg.Compression.Enabled = viper.GetBool("compression.enabled")
+	Cfg.Compression.Algorithm = viper.GetString("compression.algorithm")
+	if Cfg.Compression.Algorithm == "" {
+		Cfg.Compression.Algorithm = "gzip"
+	}
+	Cfg.Compression.ModelPath = viper.GetString("compression.model_path")
 
 	return nil
 }

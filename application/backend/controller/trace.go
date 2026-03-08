@@ -2,9 +2,12 @@ package controller
 
 import (
 	"backend/pkg"
+	"backend/service"
+	"backend/settings"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -274,7 +277,15 @@ func buildArgs(c *gin.Context, traceCode string) []string {
 		}
 		args = append(args, formTraceCode)
 	}
-	args = append(args, c.PostForm("arg1"), c.PostForm("arg2"), c.PostForm("arg3"), c.PostForm("arg4"), c.PostForm("arg5"))
+
+	arg1 := c.PostForm("arg1")
+	arg2 := c.PostForm("arg2")
+	arg3 := c.PostForm("arg3")
+	arg4 := c.PostForm("arg4")
+	arg5 := c.PostForm("arg5")
+	args = append(args, arg1, arg2, arg3, arg4, arg5)
+
+	// arg6: 图片文件名
 	file, _ := c.FormFile("file")
 	if file != nil {
 		if err := c.SaveUploadedFile(file, "files/uploadfiles/"+file.Filename); err != nil {
@@ -293,8 +304,25 @@ func buildArgs(c *gin.Context, traceCode string) []string {
 		}
 		_ = os.Remove("files/uploadfiles/" + file.Filename)
 		args = append(args, fmt.Sprintf("%s.%s", fileSHA256, ext))
+	} else {
+		args = append(args, "") // arg6 为空
 	}
-	args = append(args, "")
+
+	// arg7: 压缩证据 JSON（如果启用压缩，则对业务字段做压缩并生成 evidence）
+	evidenceJSON := ""
+	if settings.Cfg.Compression.Enabled {
+		compressor := service.NewCompressor(settings.Cfg.Compression.Algorithm)
+		payload := fmt.Sprintf("%s|%s|%s|%s|%s", arg1, arg2, arg3, arg4, arg5)
+		_, evidence, err := compressor.Compress([]byte(payload))
+		if err != nil {
+			log.Printf("[buildArgs] compression failed, skipping evidence: %v", err)
+		} else {
+			eb, _ := json.Marshal(evidence)
+			evidenceJSON = string(eb)
+		}
+	}
+	args = append(args, evidenceJSON)
+
 	return args
 }
 
@@ -308,6 +336,139 @@ func GetImg(c *gin.Context) {
 		return
 	}
 	c.File(filePath)
+}
+
+// UplinkCompressed 接受前端压缩后的 JSON 负载进行上链。
+// 请求体格式: { "compressedPayload": "<base64>", "traceabilityCode": "...(可选)" }
+// 前端将业务字段 JSON 经 Gzip 压缩 + Base64 编码后发送，后端解压还原后走正常上链流程。
+// 压缩证据（CompressionEvidence）自动生成并作为 arg7 传入链码。
+func UplinkCompressed(c *gin.Context) {
+	var req struct {
+		CompressedPayload string `json:"compressedPayload" binding:"required"`
+		TraceabilityCode  string `json:"traceabilityCode"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    400,
+			"message": "invalid request: " + err.Error(),
+		})
+		return
+	}
+
+	// 解压还原
+	compressor := service.NewCompressor(settings.Cfg.Compression.Algorithm)
+	originalData, err := compressor.Decompress(req.CompressedPayload)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    400,
+			"message": "decompress failed: " + err.Error(),
+		})
+		return
+	}
+
+	// 解析业务字段
+	var fields struct {
+		Arg1 string `json:"arg1"`
+		Arg2 string `json:"arg2"`
+		Arg3 string `json:"arg3"`
+		Arg4 string `json:"arg4"`
+		Arg5 string `json:"arg5"`
+	}
+	if err := json.Unmarshal(originalData, &fields); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    400,
+			"message": "invalid decompressed payload: " + err.Error(),
+		})
+		return
+	}
+
+	// 生成压缩证据
+	compressedBytes, _ := pkg.Base64Decode(req.CompressedPayload)
+	evidence := pkg.BuildCompressionEvidence(compressor.Algorithm(), originalData, compressedBytes)
+	evidenceBytes, _ := json.Marshal(evidence)
+
+	// 构建链码参数
+	userID, _ := c.Get("userID")
+	userIDStr := fmt.Sprint(userID)
+	userType, _ := pkg.ChaincodeQuery("GetUserType", userIDStr)
+
+	var args []string
+	args = append(args, userIDStr)
+
+	if userType == "原料供应商" {
+		traceCode := pkg.GenerateID()[1:]
+		args = append(args, traceCode)
+	} else {
+		if req.TraceabilityCode == "" {
+			c.JSON(http.StatusOK, gin.H{
+				"code":    400,
+				"message": "非原料供应商必须提供溯源码",
+			})
+			return
+		}
+		res, err := pkg.ChaincodeQuery("GetIndustrialProductInfo", req.TraceabilityCode)
+		if res == "" || err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code":    400,
+				"message": "请检查溯源码是否正确!!",
+			})
+			return
+		}
+		args = append(args, req.TraceabilityCode)
+	}
+
+	args = append(args, fields.Arg1, fields.Arg2, fields.Arg3, fields.Arg4, fields.Arg5)
+	args = append(args, "")                    // arg6: 无图片（压缩模式暂不包含图片）
+	args = append(args, string(evidenceBytes)) // arg7: 压缩证据
+
+	res, err := pkg.ChaincodeInvoke("Uplink", args)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    500,
+			"message": "uplink failed: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":                200,
+		"message":             "uplink success (compressed)",
+		"txid":                res,
+		"traceabilityCode":    args[1],
+		"compressionEvidence": evidence,
+	})
+}
+
+// CompressTest 是一个调试接口，接受原始 JSON 数据并返回压缩后的 Base64 及压缩证据。
+// POST /compress/test  body: { "data": { ... } }
+func CompressTest(c *gin.Context) {
+	var req struct {
+		Data json.RawMessage `json:"data" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    400,
+			"message": "invalid request: " + err.Error(),
+		})
+		return
+	}
+
+	compressor := service.NewCompressor(settings.Cfg.Compression.Algorithm)
+	b64, evidence, err := compressor.Compress(req.Data)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "compress failed: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":                200,
+		"message":             "compress success",
+		"compressedPayload":   b64,
+		"compressionEvidence": evidence,
+	})
 }
 
 // readTraceabilityCode supports both JSON body and form-data.

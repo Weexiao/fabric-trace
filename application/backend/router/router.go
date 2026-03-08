@@ -48,6 +48,10 @@ func SetupRouter() *gin.Engine {
 	r.POST("/getAllUsers", middleware.JWTAuthMiddleware(), con.GetAllUsers)
 	//工业产品上链
 	r.POST("/uplink", middleware.JWTAuthMiddleware(), con.Uplink)
+	// 压缩上链（前端 Gzip+Base64 压缩后 JSON 传输）
+	r.POST("/uplink/compressed", middleware.JWTAuthMiddleware(), con.UplinkCompressed)
+	// 压缩测试接口（调试用）
+	r.POST("/compress/test", con.CompressTest)
 	// 获取工业产品的上链信息
 	r.POST("/getIndustrialProductInfo", con.GetIndustrialProductInfo)
 	// 获取用户的工业产品ID列表

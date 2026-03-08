@@ -78,37 +78,37 @@ export const constantRoutes = [
     ]
   },
   // 动态属性权限控制示例页面
-  {
-    path: '/attribute-demo',
-    component: Layout,
-    meta: { title: '权限演示', icon: 'el-icon-key' },
-    children: [
-      {
-        path: '',
-        name: 'AttributeDemo',
-        component: () => import('@/views/attribute-demo/index.vue'),
-        meta: { title: '权限演示中心' }
-      },
-      {
-        path: 'orders-region',
-        name: 'OrdersRegion',
-        component: () => import('@/views/orders-region/index.vue'),
-        meta: {
-          title: '订单管理（地域限制）',
-          requiredAttributes: { region: 'Sichuan' }
-        }
-      },
-      {
-        path: 'financial-reports',
-        name: 'FinancialReports',
-        component: () => import('@/views/financial-reports/index.vue'),
-        meta: {
-          title: '财务报表（数据级别限制）',
-          requiredAttributes: { data_level: 'Internal' }
-        }
-      }
-    ]
-  },
+  // {
+  //   path: '/attribute-demo',
+  //   component: Layout,
+  //   meta: { title: '权限演示', icon: 'el-icon-key' },
+  //   children: [
+  //     {
+  //       path: '',
+  //       name: 'AttributeDemo',
+  //       component: () => import('@/views/attribute-demo/index.vue'),
+  //       meta: { title: '权限演示中心' }
+  //     },
+  //     {
+  //       path: 'orders-region',
+  //       name: 'OrdersRegion',
+  //       component: () => import('@/views/orders-region/index.vue'),
+  //       meta: {
+  //         title: '订单管理（地域限制）',
+  //         requiredAttributes: { region: 'Sichuan' }
+  //       }
+  //     },
+  //     {
+  //       path: 'financial-reports',
+  //       name: 'FinancialReports',
+  //       component: () => import('@/views/financial-reports/index.vue'),
+  //       meta: {
+  //         title: '财务报表（数据级别限制）',
+  //         requiredAttributes: { data_level: 'Internal' }
+  //       }
+  //     }
+  //   ]
+  // },
   {
     path: '/user-management',
     component: Layout,
@@ -128,7 +128,7 @@ export const constantRoutes = [
     component: Layout,
     children: [
       {
-        path: 'http://119.45.247.29:8080',
+        path: 'http://192.168.1.12:8080',
         meta: { title: '区块链浏览器', icon: 'el-icon-discover' }
       }
     ]
