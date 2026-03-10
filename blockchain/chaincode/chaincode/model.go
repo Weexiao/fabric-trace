@@ -56,7 +56,7 @@ type RawSupplierInput struct {
 	Img                 string               `json:"img"`
 	Txid                string               `json:"txid"`
 	Timestamp           string               `json:"timestamp"`
-	CompressionEvidence *CompressionEvidence `json:"compressionEvidence,omitempty"`
+	CompressionEvidence *CompressionEvidence `json:"compressionEvidence,omitempty" metadata:"compressionEvidence,optional"`
 }
 
 /*
@@ -76,7 +76,7 @@ type ManufacturerInput struct {
 	Img                 string               `json:"img"`
 	Txid                string               `json:"txid"`
 	Timestamp           string               `json:"timestamp"`
-	CompressionEvidence *CompressionEvidence `json:"compressionEvidence,omitempty"`
+	CompressionEvidence *CompressionEvidence `json:"compressionEvidence,omitempty" metadata:"compressionEvidence,optional"`
 }
 
 /*
@@ -96,7 +96,7 @@ type CarrierInput struct {
 	Img                 string               `json:"img"`
 	Txid                string               `json:"txid"`
 	Timestamp           string               `json:"timestamp"`
-	CompressionEvidence *CompressionEvidence `json:"compressionEvidence,omitempty"`
+	CompressionEvidence *CompressionEvidence `json:"compressionEvidence,omitempty" metadata:"compressionEvidence,optional"`
 }
 
 /*
@@ -116,20 +116,20 @@ type DealerInput struct {
 	Img                 string               `json:"img"`
 	Txid                string               `json:"txid"`
 	Timestamp           string               `json:"timestamp"`
-	CompressionEvidence *CompressionEvidence `json:"compressionEvidence,omitempty"`
+	CompressionEvidence *CompressionEvidence `json:"compressionEvidence,omitempty" metadata:"compressionEvidence,optional"`
 }
 
 // CompressionEvidence 记录数据压缩的防篡改证据。
 // 链上节点可通过 OriginalHash 与 CompressedHash 独立验证数据完整性。
 // FeatureVector 为 BTAE 深度学习压缩模型预留，存储潜空间的定长特征摘要。
 type CompressionEvidence struct {
-	Algorithm        string    `json:"algorithm"`               // 压缩算法: "gzip", "btae"
-	OriginalHash     string    `json:"originalHash"`            // 原始数据 SHA-256
-	CompressedHash   string    `json:"compressedHash"`          // 压缩后 SHA-256
-	OriginalSize     int64     `json:"originalSize"`            // 原始字节数
-	CompressedSize   int64     `json:"compressedSize"`          // 压缩后字节数
-	CompressionRatio float64   `json:"compressionRatio"`        // 压缩率
-	FeatureVector    []float64 `json:"featureVector,omitempty"` // BTAE 潜空间特征向量（预留）
+	Algorithm        string    `json:"algorithm"`                                                 // 压缩算法: "gzip", "btae"
+	OriginalHash     string    `json:"originalHash"`                                              // 原始数据 SHA-256
+	CompressedHash   string    `json:"compressedHash"`                                            // 压缩后 SHA-256
+	OriginalSize     int64     `json:"originalSize"`                                              // 原始字节数
+	CompressedSize   int64     `json:"compressedSize"`                                            // 压缩后字节数
+	CompressionRatio float64   `json:"compressionRatio"`                                          // 压缩率
+	FeatureVector    []float64 `json:"featureVector,omitempty" metadata:"featureVector,optional"` // BTAE 潜空间特征向量（预留）
 }
 
 // FileRole defines who uploaded/owns a file for role-based permissions.
