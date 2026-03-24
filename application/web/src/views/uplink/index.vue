@@ -231,6 +231,49 @@
         @continue="onContinueInput"
       />
 
+      <!-- 表格解析并上链（阶段1：演示） -->
+      <el-divider>{{ $t('common.tableSection') || '表格上链(演示)' }}</el-divider>
+      <div class="file-card">
+        <el-upload
+          action="#"
+          :auto-upload="false"
+          :show-file-list="false"
+          :on-change="onTableFileSelected"
+          :before-upload="beforeTableUpload"
+          :limit="1"
+          :disabled="tableUploading || submitting || userType === '零售商'"
+          accept=".csv,.tsv,.txt"
+        >
+          <el-button type="primary" size="mini" :loading="tableUploading" :disabled="userType === '零售商'">{{ $t('common.uploadTable') || '上传表格(CSV/TSV)' }}</el-button>
+        </el-upload>
+        <div v-if="tableFile" class="file-hint">{{ tableFile.name }}</div>
+        <div v-if="tableMeta" class="file-hint">{{ ($t('common.tableMeta') || '共 {rows} 行, {cols} 列').replace('{rows}', tableMeta.rowCount).replace('{cols}', tableMeta.colCount) }}</div>
+
+        <el-table v-if="tableHeaders.length" :data="tablePreviewRows" size="mini" style="width: 100%; margin-top: 8px;">
+          <el-table-column v-for="(h, idx) in tableHeaders" :key="h + idx" :label="h || ('Column ' + (idx + 1))" min-width="120">
+            <template v-slot:default="scope">{{ scope.row[idx] || '-' }}</template>
+          </el-table-column>
+        </el-table>
+
+        <div class="file-actions">
+          <span class="offchain-submit-wrapper" @click="onTableSubmitClick">
+            <el-button
+              size="mini"
+              type="primary"
+              plain
+              :disabled="!tableFile || tableUploading || !canUploadTable"
+              :loading="tableUploading"
+              @click.stop="uploadParsedTableMock"
+            >{{ $t('common.submit') || '提 交' }}</el-button>
+          </span>
+          <el-button size="mini" plain :disabled="!tableFile || tableUploading" @click="clearTableFile">{{ $t('common.reset') || '清 空' }}</el-button>
+          <span v-if="tableFile && !canUploadTable" class="offchain-guide">
+            {{ $t('common.offchainNeedTraceTip') || '请先提交上链生成溯源码后再上传附件' }}
+          </span>
+        </div>
+        <div class="file-tip">{{ $t('common.tableTip') || '阶段1为演示模式：解析并压缩表格后，会记录到本地模拟账本，并在追溯页展示。' }}</div>
+      </div>
+
       <!-- 链下文件上传与列表 -->
       <el-divider>{{ $t('common.fileSection') || '链下文件' }}</el-divider>
       <div class="file-card">
@@ -301,6 +344,7 @@ import { LENGTHS } from '@/utils/limits'
 import { sanitize } from '@/utils/sanitize'
 import { normalizeRow } from '@/utils/normalize'
 import { uploadFile, listManifests, downloadFile } from '@/api/file'
+import { parseTableFile, saveTableMockRecord } from '@/utils/table_mock'
 
 export default {
   name: 'Uplink',
@@ -369,7 +413,13 @@ export default {
       offchainUploading: false,
       manifests: [],
       manifestLoading: false,
-      debouncedFetch: null
+      debouncedFetch: null,
+      // 表格上链（阶段1：演示）
+      tableFile: null,
+      tableUploading: false,
+      tableHeaders: [],
+      tablePreviewRows: [],
+      tableMeta: null
     }
   },
   computed: {
@@ -423,6 +473,10 @@ export default {
     },
     canUploadOffchain() {
       // 必须有溯源码（18位）且非零售商
+      const codeOk = /^\d{18}$/.test((this.tracedata.traceabilityCode || '').trim())
+      return codeOk && this.userType !== '零售商'
+    },
+    canUploadTable() {
       const codeOk = /^\d{18}$/.test((this.tracedata.traceabilityCode || '').trim())
       return codeOk && this.userType !== '零售商'
     }
@@ -1215,6 +1269,96 @@ export default {
     },
     clearOffchainFile() {
       this.offchainFile = null
+    },
+    beforeTableUpload(file) {
+      const max = 10 * 1024 * 1024
+      const name = String(file.name || '').toLowerCase()
+      const okExt = /\.(csv|tsv|txt)$/.test(name)
+      if (!okExt) {
+        this.msgError(this.$t('common.tableTypeOnlyCsv') || '阶段1仅支持 CSV/TSV/TXT 表格文件')
+        return false
+      }
+      if (file.size > max) {
+        this.msgError(this.$t('common.tableTooLarge') || '表格文件超过 10MB')
+        return false
+      }
+      return true
+    },
+    async onTableFileSelected(file) {
+      const raw = file && file.raw ? file.raw : file
+      if (!raw) return
+      this.tableFile = raw
+      this.tableMeta = null
+      this.tableHeaders = []
+      this.tablePreviewRows = []
+      try {
+        const parsed = await parseTableFile(raw)
+        this.tableMeta = {
+          rowCount: parsed.rowCount,
+          colCount: parsed.colCount,
+          delimiter: parsed.delimiter
+        }
+        this.tableHeaders = parsed.headers || []
+        this.tablePreviewRows = (parsed.rows || []).slice(0, 10)
+      } catch (e) {
+        this.msgError(this.$t('result.exception') || '解析失败')
+      }
+    },
+    clearTableFile() {
+      this.tableFile = null
+      this.tableMeta = null
+      this.tableHeaders = []
+      this.tablePreviewRows = []
+    },
+    onTableSubmitClick() {
+      if (!this.tableFile || this.tableUploading) return
+      if (!this.canUploadTable) this.uploadParsedTableMock()
+    },
+    async uploadParsedTableMock() {
+      if (!this.tableFile) return
+      const rawCode = (this.tracedata.traceabilityCode || '').trim()
+      if (!/^\d{18}$/.test(rawCode)) {
+        this.msgError(this.$t('common.offchainNeedTraceTip') || '请先提交上链生成溯源码后再上传附件')
+        this.scrollToUplinkForm()
+        if (this.traceCodeLocked) this.unlockTraceCode()
+        return
+      }
+
+      this.tableUploading = true
+      try {
+        const previewObj = {
+          source: 'table-upload-stage1-mock',
+          fileName: this.tableFile.name,
+          headers: this.tableHeaders,
+          rows: this.tablePreviewRows,
+          rowCount: this.tableMeta ? this.tableMeta.rowCount : this.tablePreviewRows.length,
+          colCount: this.tableMeta ? this.tableMeta.colCount : this.tableHeaders.length,
+          delimiter: this.tableMeta ? this.tableMeta.delimiter : ','
+        }
+        const compressed = compressPayload(previewObj)
+        const now = new Date().toISOString()
+        const mockTxid = `mock-table-${Date.now().toString(16)}`
+        saveTableMockRecord(rawCode, {
+          txid: mockTxid,
+          uploader: this.name || '-',
+          role: this.userType || '-',
+          fileName: this.tableFile.name,
+          rowCount: previewObj.rowCount,
+          colCount: previewObj.colCount,
+          previewRows: previewObj.rows,
+          headers: previewObj.headers,
+          compressedSize: compressed.compressedSize,
+          originalSize: compressed.originalSize,
+          time: now
+        })
+        this.msgSuccess((this.$t('common.tableMockSuccess') || '表格演示上链成功，已可在追溯页查看') + ` (txid: ${mockTxid})`)
+        this.clearTableFile()
+      } catch (e) {
+        if (process.env.NODE_ENV !== 'production') console.error('upload parsed table mock failed', e)
+        this.msgError(this.$t('result.exception') || '上传失败')
+      } finally {
+        this.tableUploading = false
+      }
     },
     scrollToUplinkForm() {
       // scroll to top of page where the on-chain form is

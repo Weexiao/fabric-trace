@@ -46,6 +46,21 @@
         <el-table-column type="expand">
           <template v-slot="props">
             <div v-if="isExpanded(props.row)">
+              <el-card v-if="mockTableRecordsOf(props.row).length" shadow="never" style="margin-bottom: 10px;">
+                <div slot="header" class="clearfix">
+                  <span>{{ $t('trace.tableMockSection') || '表格上链记录(阶段1演示)' }}</span>
+                </div>
+                <el-table :data="mockTableRecordsOf(props.row)" size="mini" style="width: 100%;">
+                  <el-table-column prop="fileName" :label="$t('common.file') || '文件'" min-width="180" show-overflow-tooltip />
+                  <el-table-column prop="rowCount" :label="$t('common.rows') || '行数'" width="90" />
+                  <el-table-column prop="colCount" :label="$t('common.cols') || '列数'" width="90" />
+                  <el-table-column prop="uploader" :label="$t('common.uploader') || '上传者'" width="120" />
+                  <el-table-column prop="time" :label="$t('common.time') || '时间'" width="180">
+                    <template v-slot:default="scope">{{ formatDateTime(scope.row.time) }}</template>
+                  </el-table-column>
+                  <el-table-column prop="txid" :label="$t('trace.txid') || '区块链交易ID'" min-width="180" show-overflow-tooltip />
+                </el-table>
+              </el-card>
               <el-collapse accordion>
                 <el-collapse-item name="farmer">
                   <template v-slot:title>
@@ -387,6 +402,7 @@ import { apiWrap, retryLast } from '@/utils/error'
 import safeGetUtil from '@/utils/safeGet'
 import { buildImgUrl } from '@/utils/url'
 import { normalizeResults, toList } from '@/utils/normalize'
+import { getTableMockRecords } from '@/utils/table_mock'
 
 const RECENT_KEY = 'trace_recent'
 const MAX_RECENT = 10
@@ -824,6 +840,11 @@ export default {
         .finally(() => {
           this.$set(row, '_fileHashesLoading', false)
         })
+    },
+    mockTableRecordsOf(row) {
+      const code = row && row.traceabilityCode ? String(row.traceabilityCode) : ''
+      if (!code) return []
+      return getTableMockRecords(code)
     }
   },
   errorCaptured(err) {

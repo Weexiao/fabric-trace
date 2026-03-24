@@ -24,9 +24,19 @@ const messages = {
       deleteImage: '删除图片',
       errorSubmitFlow: '提交流程异常，请重试',
       fileSection: '链下文件',
+      tableSection: '表格上链(演示)',
+      uploadTable: '上传表格(CSV/TSV)',
+      tableTip: '阶段1为演示模式：解析并压缩表格后，会记录到本地模拟账本，并在追溯页展示。',
+      tableTypeOnlyCsv: '阶段1仅支持 CSV/TSV/TXT 表格文件',
+      tableTooLarge: '表格文件超过 10MB',
+      tableMockSuccess: '表格演示上链成功，已可在追溯页查看',
+      tableMeta: '共 {rows} 行, {cols} 列',
       uploadFile: '上传文件(≤50MB)',
       fileTip: '文件将加密后存 IPFS，仅在链上存元数据。制造商可下载全部，其他角色仅可下载自己上传的文件。',
       fileTooLarge: '文件超过 50MB',
+      file: '文件',
+      rows: '行数',
+      cols: '列数',
       size: '大小',
       role: '角色',
       uploader: '上传者',
@@ -200,7 +210,8 @@ const messages = {
         logistics: '物流',
         dealer: '经销商'
       },
-      ipfsHash: 'IPFS文件哈希'
+      ipfsHash: 'IPFS文件哈希',
+      tableMockSection: '表格上链记录(阶段1演示)'
     },
     error: {
       fetchTraceFailed: '查询接口请求失败，请稍后重试'
@@ -249,9 +260,21 @@ const messages = {
       deleteImage: 'Remove Image',
       errorSubmitFlow: 'Submission flow error, please retry',
       fileSection: 'Off-chain Files',
+      tableSection: 'Table On-chain (Demo)',
+      uploadTable: 'Upload Table (CSV/TSV)',
+      tableTip: 'Stage 1 demo: parse and compress table data, then save it to a local mock ledger for trace view.',
+      tableTypeOnlyCsv: 'Stage 1 supports CSV/TSV/TXT only',
+      tableTooLarge: 'Table file exceeds 10MB',
+      tableMockSuccess: 'Table demo on-chain recorded, now visible in trace page',
+      tableMeta: '{rows} rows, {cols} columns',
       uploadFile: 'Upload File (≤50MB)',
       fileTip: 'Files will be encrypted and stored in IPFS, only metadata is stored on-chain. Manufacturers can download all, other roles can only download their own uploaded files.',
-      fileTooLarge: 'File exceeds 50MB'
+      fileTooLarge: 'File exceeds 50MB',
+      file: 'File',
+      rows: 'Rows',
+      cols: 'Cols',
+      uploader: 'Uploader',
+      time: 'Time'
     },
     actions: {
       copy: 'Copy',
@@ -418,7 +441,8 @@ const messages = {
         manufacturer: 'Manufacturer',
         logistics: 'Logistics',
         dealer: 'Dealer'
-      }
+      },
+      tableMockSection: 'Table On-chain Records (Stage 1 Demo)'
     },
     error: {
       fetchTraceFailed: 'Trace API request failed, please try again later'
