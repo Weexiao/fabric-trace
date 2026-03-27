@@ -213,7 +213,9 @@ const messages = {
         dealer: '经销商'
       },
       ipfsHash: 'IPFS文件哈希',
-      tableMockSection: '表格上链记录(阶段1演示)'
+      tableMockSection: '表格上链记录(阶段1演示)',
+      sourceHash: '链下文件源哈希',
+      compressedBits: '压缩文件离散表示'
     },
     error: {
       fetchTraceFailed: '查询接口请求失败，请稍后重试'

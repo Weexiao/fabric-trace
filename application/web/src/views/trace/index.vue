@@ -130,7 +130,7 @@
                           <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.sourceHash)">{{ $t('actions.copy') || '复制' }}</el-button>
                         </div>
                         <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.raw_supplier', []).filter(it => it.compressedBits && it.compressedBits.length)" :key="`compressed-bits-${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
-                          <span class="hash-text">{{ ($t('trace.compressedBits') || '压缩文件离散数组(0/1)') + ': ' + h.compressedBits.join('') }}</span>
+                          <span class="hash-text">{{ ($t('trace.compressedBits') || '压缩文件离散表示') + ': ' + h.compressedBits.join('') }}</span>
                           <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.compressedBits.join(''))">{{ $t('actions.copy') || '复制' }}</el-button>
                         </div>
                       </div>

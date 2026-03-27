@@ -8,7 +8,7 @@ type Manifest struct {
 	Hash             string `json:"hash"`
 	SourceHash       string `json:"sourceHash,omitempty"`
 	CompressedHash   string `json:"compressedHash"`
-	CompressedBits   []int  `json:"compressedBits,omitempty"`
+	CompressedBits   []int  `json:"compressedBits"`
 	CompressAlg      string `json:"compressAlg"`
 	Mime             string `json:"mime"`
 	Size             int64  `json:"size"`

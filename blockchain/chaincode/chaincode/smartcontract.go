@@ -369,6 +369,9 @@ func (s *SmartContract) PutFileManifest(ctx contractapi.TransactionContextInterf
 	if manifest.SourceHash == "" {
 		manifest.SourceHash = manifest.Hash
 	}
+	if manifest.CompressedBits == nil {
+		manifest.CompressedBits = []int{}
+	}
 	if manifest.Encrypted && manifest.KeyVersion == "" {
 		return "", errors.New("keyVersion required when encrypted is true")
 	}
@@ -431,6 +434,9 @@ func (s *SmartContract) GetFileManifest(ctx contractapi.TransactionContextInterf
 	var manifest FileManifest
 	if err := json.Unmarshal(data, &manifest); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal manifest: %v", err)
+	}
+	if manifest.CompressedBits == nil {
+		manifest.CompressedBits = []int{}
 	}
 	return &manifest, nil
 }

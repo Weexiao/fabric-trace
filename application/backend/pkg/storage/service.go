@@ -177,7 +177,7 @@ func (s *Service) uploadEncrypted(ctx context.Context, traceID, fileID, mime str
 
 	sourceHash := pkg.SHA256Hex(plain)
 	compressedHash := ""
-	compressedBits := []int(nil)
+	compressedBits := make([]int, 0)
 	compressAlg := ""
 	if shouldCompressForEvidence(int64(len(plain))) {
 		compressed, alg, err := compressForEvidence(plain)
@@ -224,7 +224,7 @@ func (s *Service) uploadPlaintextStream(ctx context.Context, traceID, fileID, mi
 	writerForHash := io.Writer(sourceHasher)
 
 	compressedHash := ""
-	compressedBits := []int(nil)
+	compressedBits := make([]int, 0)
 	compressAlg := ""
 	applyCompressionEvidence := shouldCompressForEvidence(sourceSize)
 	var gzipWriter *gzip.Writer
