@@ -123,11 +123,15 @@
                     <el-form-item v-else-if="safeGet(props.row, '_fileHashesError', '')" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
                       <span style="color:#f56c6c;">{{ safeGet(props.row, '_fileHashesError', '') }}</span>
                     </el-form-item>
-                    <el-form-item v-else-if="safeGet(props.row, '_fileHashesByRole.raw_supplier', []).length" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                    <el-form-item v-else-if="safeGet(props.row, '_fileHashEntriesByRole.raw_supplier', []).length" :label="($t('trace.ipfsHash') || '文件哈希') + ':'" class="hash-item">
                       <div>
-                        <div v-for="h in safeGet(props.row, '_fileHashesByRole.raw_supplier', [])" :key="h" class="hash-row">
-                          <span class="hash-text">{{ h }}</span>
-                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.raw_supplier', [])" :key="`${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
+                          <span class="hash-text">{{ ($t('trace.sourceHash') || '源文件哈希') + ': ' + h.sourceHash }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.sourceHash)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        </div>
+                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.raw_supplier', []).filter(it => it.compressedHash)" :key="`compressed-${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
+                          <span class="hash-text">{{ ($t('trace.compressedHash') || '压缩文件哈希') + ': ' + h.compressedHash }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.compressedHash)">{{ $t('actions.copy') || '复制' }}</el-button>
                         </div>
                       </div>
                     </el-form-item>
@@ -194,11 +198,15 @@
                     <el-form-item v-else-if="safeGet(props.row, '_fileHashesError', '')" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
                       <span style="color:#f56c6c;">{{ safeGet(props.row, '_fileHashesError', '') }}</span>
                     </el-form-item>
-                    <el-form-item v-else-if="safeGet(props.row, '_fileHashesByRole.manufacturer', []).length" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                    <el-form-item v-else-if="safeGet(props.row, '_fileHashEntriesByRole.manufacturer', []).length" :label="($t('trace.ipfsHash') || '文件哈希') + ':'" class="hash-item">
                       <div>
-                        <div v-for="h in safeGet(props.row, '_fileHashesByRole.manufacturer', [])" :key="h" class="hash-row">
-                          <span class="hash-text">{{ h }}</span>
-                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.manufacturer', [])" :key="`${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
+                          <span class="hash-text">{{ ($t('trace.sourceHash') || '源文件哈希') + ': ' + h.sourceHash }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.sourceHash)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        </div>
+                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.manufacturer', []).filter(it => it.compressedHash)" :key="`compressed-${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
+                          <span class="hash-text">{{ ($t('trace.compressedHash') || '压缩文件哈希') + ': ' + h.compressedHash }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.compressedHash)">{{ $t('actions.copy') || '复制' }}</el-button>
                         </div>
                       </div>
                     </el-form-item>
@@ -265,11 +273,15 @@
                     <el-form-item v-else-if="safeGet(props.row, '_fileHashesError', '')" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
                       <span style="color:#f56c6c;">{{ safeGet(props.row, '_fileHashesError', '') }}</span>
                     </el-form-item>
-                    <el-form-item v-else-if="safeGet(props.row, '_fileHashesByRole.carrier', []).length" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                    <el-form-item v-else-if="safeGet(props.row, '_fileHashEntriesByRole.carrier', []).length" :label="($t('trace.ipfsHash') || '文件哈希') + ':'" class="hash-item">
                       <div>
-                        <div v-for="h in safeGet(props.row, '_fileHashesByRole.carrier', [])" :key="h" class="hash-row">
-                          <span class="hash-text">{{ h }}</span>
-                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.carrier', [])" :key="`${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
+                          <span class="hash-text">{{ ($t('trace.sourceHash') || '源文件哈希') + ': ' + h.sourceHash }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.sourceHash)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        </div>
+                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.carrier', []).filter(it => it.compressedHash)" :key="`compressed-${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
+                          <span class="hash-text">{{ ($t('trace.compressedHash') || '压缩文件哈希') + ': ' + h.compressedHash }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.compressedHash)">{{ $t('actions.copy') || '复制' }}</el-button>
                         </div>
                       </div>
                     </el-form-item>
@@ -336,11 +348,15 @@
                     <el-form-item v-else-if="safeGet(props.row, '_fileHashesError', '')" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
                       <span style="color:#f56c6c;">{{ safeGet(props.row, '_fileHashesError', '') }}</span>
                     </el-form-item>
-                    <el-form-item v-else-if="safeGet(props.row, '_fileHashesByRole.dealer', []).length" :label="($t('trace.ipfsHash') || 'IPFS文件哈希') + ':'" class="hash-item">
+                    <el-form-item v-else-if="safeGet(props.row, '_fileHashEntriesByRole.dealer', []).length" :label="($t('trace.ipfsHash') || '文件哈希') + ':'" class="hash-item">
                       <div>
-                        <div v-for="h in safeGet(props.row, '_fileHashesByRole.dealer', [])" :key="h" class="hash-row">
-                          <span class="hash-text">{{ h }}</span>
-                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.dealer', [])" :key="`${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
+                          <span class="hash-text">{{ ($t('trace.sourceHash') || '源文件哈希') + ': ' + h.sourceHash }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.sourceHash)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        </div>
+                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.dealer', []).filter(it => it.compressedHash)" :key="`compressed-${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
+                          <span class="hash-text">{{ ($t('trace.compressedHash') || '压缩文件哈希') + ': ' + h.compressedHash }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.compressedHash)">{{ $t('actions.copy') || '复制' }}</el-button>
                         </div>
                       </div>
                     </el-form-item>
@@ -429,6 +445,12 @@ export default {
       total: 0,
       manifests: [],
       fileHashesByRole: {
+        raw_supplier: [],
+        manufacturer: [],
+        carrier: [],
+        dealer: []
+      },
+      fileHashEntriesByRole: {
         raw_supplier: [],
         manufacturer: [],
         carrier: [],
@@ -552,6 +574,55 @@ export default {
       return acc
     },
 
+    normalizeFileHashEntriesByRole(data) {
+      const byRole = (data && typeof data === 'object' && data.fileHashEntriesByRole && typeof data.fileHashEntriesByRole === 'object')
+        ? data.fileHashEntriesByRole
+        : null
+      if (byRole) {
+        const normalizeList = (list) => {
+          if (!Array.isArray(list)) return []
+          return list
+            .map((it) => {
+              const sourceHash = it && it.sourceHash ? String(it.sourceHash) : ''
+              const compressedHash = it && it.compressedHash ? String(it.compressedHash) : ''
+              if (!sourceHash) return null
+              return { sourceHash, compressedHash }
+            })
+            .filter(Boolean)
+        }
+        return {
+          raw_supplier: normalizeList(byRole.raw_supplier),
+          manufacturer: normalizeList(byRole.manufacturer),
+          carrier: normalizeList(byRole.carrier),
+          dealer: normalizeList(byRole.dealer)
+        }
+      }
+
+      // Backward compatible: derive entries from manifests or old role-hash list.
+      const manifests = (data && typeof data === 'object' && Array.isArray(data.manifests)) ? data.manifests : []
+      const acc = { raw_supplier: [], manufacturer: [], carrier: [], dealer: [] }
+      const seen = { raw_supplier: new Set(), manufacturer: new Set(), carrier: new Set(), dealer: new Set() }
+      manifests.forEach((m) => {
+        const role = m && m.role ? String(m.role) : ''
+        if (!acc[role]) return
+        const sourceHash = m && (m.sourceHash || m.hash) ? String(m.sourceHash || m.hash) : ''
+        const compressedHash = m && m.compressedHash ? String(m.compressedHash) : ''
+        if (!sourceHash) return
+        const key = `${sourceHash}|${compressedHash}`
+        if (seen[role].has(key)) return
+        seen[role].add(key)
+        acc[role].push({ sourceHash, compressedHash })
+      })
+
+      if (manifests.length) return acc
+
+      const old = this.normalizeFileHashesByRole(data)
+      Object.keys(acc).forEach((role) => {
+        acc[role] = (old[role] || []).map(h => ({ sourceHash: h, compressedHash: '' }))
+      })
+      return acc
+    },
+
     onInputChange(val) {
       const v = sanitize(String(val || '').replace(/[^\d]/g, ''), LENGTHS.traceCode)
       // v-model 已经会更新 traceCode，这里是为了强制只保留数字
@@ -576,6 +647,7 @@ export default {
       this.recentSelected = null
       this.errorMessage = null
       this.fileHashesByRole = { raw_supplier: [], manufacturer: [], carrier: [], dealer: [] }
+      this.fileHashEntriesByRole = { raw_supplier: [], manufacturer: [], carrier: [], dealer: [] }
     },
     loadRecent() {
       try {
@@ -638,6 +710,7 @@ export default {
 
         // ✅ 单码查询：解析 IPFS hash
         this.fileHashesByRole = this.normalizeFileHashesByRole(data)
+        this.fileHashEntriesByRole = this.normalizeFileHashEntriesByRole(data)
 
         // manifests 不再展示
         this.manifests = []
@@ -751,6 +824,7 @@ export default {
       this.tracedata = deduped.map((r) => {
         if (r && typeof r === 'object') {
           if (r._fileHashesByRole) delete r._fileHashesByRole
+          if (r._fileHashEntriesByRole) delete r._fileHashEntriesByRole
           if (r._fileHashesLoading) delete r._fileHashesLoading
           if (r._fileHashesError) delete r._fileHashesError
         }
@@ -821,6 +895,7 @@ export default {
       if (!code) return
       // 缓存命中/请求中：不重复请求
       if (row._fileHashesByRole && typeof row._fileHashesByRole === 'object') return
+      if (row._fileHashEntriesByRole && typeof row._fileHashEntriesByRole === 'object') return
       if (row._fileHashesLoading) return
 
       this.$set(row, '_fileHashesLoading', true)
@@ -831,7 +906,9 @@ export default {
         .then((res) => {
           const data = res && res.data ? res.data : null
           const byRole = this.normalizeFileHashesByRole(data)
+          const entryByRole = this.normalizeFileHashEntriesByRole(data)
           this.$set(row, '_fileHashesByRole', byRole)
+          this.$set(row, '_fileHashEntriesByRole', entryByRole)
         })
         .catch((e) => {
           const msg = (e && e.message) ? e.message : '加载失败'

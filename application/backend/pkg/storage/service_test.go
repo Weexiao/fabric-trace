@@ -48,4 +48,3 @@ func TestResolveCompressionAlgorithmLabel(t *testing.T) {
 		t.Fatalf("got %s, want btae_fallback_gzip", got)
 	}
 }
-

@@ -6,12 +6,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"hash"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 )
 
@@ -30,39 +31,51 @@ func NewIPFSClient(apiURL string, maxSizeBytes int64) *IPFSClient {
 	}
 }
 
-// Put uploads data to IPFS add endpoint. Payload is buffered (<=限制)，hash/size基于完整字节。
+var errSizeLimitExceeded = errors.New("ipfs upload size limit exceeded")
+
+type hashCountWriter struct {
+	hash         hash.Hash
+	maxSizeBytes int64
+	size         int64
+}
+
+func (w *hashCountWriter) Write(p []byte) (int, error) {
+	w.size += int64(len(p))
+	if w.maxSizeBytes > 0 && w.size > w.maxSizeBytes {
+		return 0, fmt.Errorf("%w: file exceeds limit %d bytes", errSizeLimitExceeded, w.maxSizeBytes)
+	}
+	_, _ = w.hash.Write(p)
+	return len(p), nil
+}
+
+// Put uploads data to IPFS add endpoint in streaming mode.
+// Hash and size are calculated on the uploaded byte stream.
 func (c *IPFSClient) Put(ctx context.Context, r io.Reader, sizeHint int64) (cid string, size int64, hashHex string, err error) {
 	_ = sizeHint
-	data, err := io.ReadAll(r)
-	if err != nil {
-		return
-	}
-	size = int64(len(data))
-	if c.maxSizeBytes > 0 && size > c.maxSizeBytes {
-		err = fmt.Errorf("file exceeds limit %d bytes", c.maxSizeBytes)
-		return
-	}
-	h := sha256.Sum256(data)
-	hashHex = hex.EncodeToString(h[:])
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+	counter := &hashCountWriter{hash: sha256.New(), maxSizeBytes: c.maxSizeBytes}
 
-	// IPFS add expects multipart/form-data with a file field.
-	var body bytes.Buffer
-	mw := multipart.NewWriter(&body)
-	fw, e := mw.CreateFormFile("file", "blob")
-	if e != nil {
-		err = e
-		return
-	}
-	if _, e = fw.Write(data); e != nil {
-		err = e
-		return
-	}
-	if e = mw.Close(); e != nil {
-		err = e
-		return
-	}
+	go func() {
+		defer func() {
+			_ = mw.Close()
+			_ = pw.Close()
+		}()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.apiURL+"/api/v0/add?pin=true", &body)
+		fw, e := mw.CreateFormFile("file", "blob")
+		if e != nil {
+			_ = pw.CloseWithError(e)
+			return
+		}
+
+		tee := io.TeeReader(r, counter)
+		if _, e = io.Copy(fw, tee); e != nil {
+			_ = pw.CloseWithError(e)
+			return
+		}
+	}()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.apiURL+"/api/v0/add?pin=true", pr)
 	if err != nil {
 		return
 	}
@@ -70,6 +83,9 @@ func (c *IPFSClient) Put(ctx context.Context, r io.Reader, sizeHint int64) (cid 
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		if errors.Is(err, errSizeLimitExceeded) {
+			err = fmt.Errorf("file exceeds limit %d bytes", c.maxSizeBytes)
+		}
 		return
 	}
 	defer func() { _ = resp.Body.Close() }()
@@ -88,11 +104,8 @@ func (c *IPFSClient) Put(ctx context.Context, r io.Reader, sizeHint int64) (cid 
 		return
 	}
 	cid = addResp.Hash
-	if addResp.Size != "" {
-		if parsed, e := strconv.ParseInt(addResp.Size, 10, 64); e == nil {
-			size = parsed
-		}
-	}
+	size = counter.size
+	hashHex = hex.EncodeToString(counter.hash.Sum(nil))
 	return
 }
 

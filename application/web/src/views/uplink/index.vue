@@ -231,8 +231,8 @@
         @continue="onContinueInput"
       />
 
-      <!-- 表格解析并上链（阶段1：演示） -->
-      <el-divider>{{ $t('common.tableSection') || '表格上链(演示)' }}</el-divider>
+      <!-- 表格解析并上链 -->
+      <el-divider>{{ $t('common.tableSection') || '表格上链' }}</el-divider>
       <div class="file-card">
         <el-upload
           action="#"
@@ -271,7 +271,7 @@
             {{ $t('common.offchainNeedTraceTip') || '请先提交上链生成溯源码后再上传附件' }}
           </span>
         </div>
-        <div class="file-tip">{{ $t('common.tableTip') || '阶段1为演示模式：解析并压缩表格后，会记录到本地模拟账本，并在追溯页展示。' }}</div>
+<!--        <div class="file-tip">{{ $t('common.tableTip') || '阶段1为演示模式：解析并压缩表格后，会记录到本地模拟账本，并在追溯页展示。' }}</div>-->
       </div>
 
       <!-- 链下文件上传与列表 -->
@@ -286,9 +286,15 @@
           :limit="1"
           :disabled="offchainUploading || submitting"
         >
-          <el-button type="primary" size="mini" :loading="offchainUploading">{{ $t('common.uploadFile') || '上传文件(≤50MB)' }}</el-button>
+          <el-button type="primary" size="mini" :loading="offchainUploading">{{ $t('common.uploadFile') || '上传文件(≤5GB)' }}</el-button>
         </el-upload>
         <div v-if="offchainFile" class="file-hint">{{ offchainFile.name }} ({{ formatSize(offchainFile.size) }})</div>
+        <div v-if="offchainFile && shouldShowCompressionModule" class="file-tip">
+          {{ $t('common.compressionEnabledTip') || '数据压缩模块已启用：将上链源文件哈希与压缩后文件哈希，源文件链下存储。' }}
+        </div>
+        <div v-else-if="offchainFile" class="file-tip">
+          {{ $t('common.compressionSkippedTip') || '未触发压缩模块：仅上链源文件哈希，源文件链下存储。' }}
+        </div>
         <div class="file-actions">
           <!-- 用 wrapper 接管点击：即使按钮 disabled，也能给出引导反馈 -->
           <span class="offchain-submit-wrapper" @click="onOffchainSubmitClick">
@@ -314,7 +320,12 @@
       <el-table v-loading="manifestLoading" :data="manifests" size="mini" style="width: 100%; margin-top: 12px;">
         <el-table-column prop="fileID" label="FileID" width="180" />
         <el-table-column prop="cid" label="CID" width="220" />
-        <el-table-column prop="hash" label="Hash" min-width="220" show-overflow-tooltip />
+        <el-table-column prop="sourceHash" label="Source Hash" min-width="220" show-overflow-tooltip>
+          <template v-slot:default="scope">{{ scope.row.sourceHash || scope.row.hash || '-' }}</template>
+        </el-table-column>
+        <el-table-column prop="compressedHash" label="Compressed Hash" min-width="220" show-overflow-tooltip>
+          <template v-slot:default="scope">{{ scope.row.compressedHash || '-' }}</template>
+        </el-table-column>
         <el-table-column prop="mime" label="MIME" width="140" />
         <el-table-column prop="size" :label="$t('common.size') || '大小'" width="120">
           <template v-slot:default="scope">{{ formatSize(scope.row.size) }}</template>
@@ -419,7 +430,9 @@ export default {
       tableUploading: false,
       tableHeaders: [],
       tablePreviewRows: [],
-      tableMeta: null
+      tableMeta: null,
+      compressionMinBytes: 5 * 1024 * 1024,
+      compressionMaxBytes: 5 * 1024 * 1024 * 1024
     }
   },
   computed: {
@@ -479,6 +492,11 @@ export default {
     canUploadTable() {
       const codeOk = /^\d{18}$/.test((this.tracedata.traceabilityCode || '').trim())
       return codeOk && this.userType !== '零售商'
+    },
+    shouldShowCompressionModule() {
+      const size = this.offchainFile && Number(this.offchainFile.size)
+      if (!size || Number.isNaN(size)) return false
+      return size >= this.compressionMinBytes && size <= this.compressionMaxBytes
     }
   },
   watch: {
@@ -1260,9 +1278,9 @@ export default {
       this.offchainFile = file.raw || file
     },
     beforeOffchainUpload(file) {
-      const max = 50 * 1024 * 1024
+      const max = 5 * 1024 * 1024 * 1024
       if (file.size > max) {
-        this.msgError(this.$t('common.fileTooLarge') || '文件超过 50MB')
+        this.msgError(this.$t('common.fileTooLarge') || '文件超过 5GB')
         return false
       }
       return true
@@ -1451,7 +1469,8 @@ export default {
       if (!bytes && bytes !== 0) return '-'
       if (bytes < 1024) return bytes + ' B'
       if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-      return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+      if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+      return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
     },
     debounce(fn, wait = 300) {
       let timer

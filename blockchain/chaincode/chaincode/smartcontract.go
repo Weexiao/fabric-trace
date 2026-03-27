@@ -340,7 +340,7 @@ func (s *SmartContract) GetIndustrialProductHistory(ctx contractapi.TransactionC
 	return records, nil
 }
 
-const maxFileSizeBytes int64 = 50 * 1024 * 1024
+const maxFileSizeBytes int64 = 5 * 1024 * 1024 * 1024
 
 // PutFileManifest writes off-chain file metadata onto the ledger with role/size checks.
 func (s *SmartContract) PutFileManifest(ctx contractapi.TransactionContextInterface, userID string, manifestJSON string) (string, error) {
@@ -366,6 +366,9 @@ func (s *SmartContract) PutFileManifest(ctx contractapi.TransactionContextInterf
 		return "", fmt.Errorf("role mismatch: manifest role %s not allowed for user type %s", manifest.Role, userType)
 	}
 	manifest.Role = role
+	if manifest.SourceHash == "" {
+		manifest.SourceHash = manifest.Hash
+	}
 	if manifest.Encrypted && manifest.KeyVersion == "" {
 		return "", errors.New("keyVersion required when encrypted is true")
 	}

@@ -4,10 +4,15 @@ import (
 	"backend/pkg"
 	"backend/settings"
 	"bytes"
+	"compress/gzip"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"hash"
 	"io"
+	"strings"
 )
 
 // Service combines crypto and IPFS storage.
@@ -41,48 +46,10 @@ func NewService() (*Service, error) {
 
 // Upload encrypts, uploads to IPFS, and returns manifest fields.
 func (s *Service) Upload(ctx context.Context, traceID, fileID, mime string, r io.Reader) (*Manifest, error) {
-	if !settings.Cfg.Crypto.Enabled {
-		// No encryption: store plaintext directly
-		plain, err := io.ReadAll(r)
-		if err != nil {
-			return nil, err
-		}
-		cid, size, _, err := s.ipfs.Put(ctx, bytes.NewReader(plain), int64(len(plain)))
-		if err != nil {
-			return nil, err
-		}
-		m := &Manifest{
-			TraceabilityCode: traceID,
-			FileID:           fileID,
-			CID:              cid,
-			Hash:             pkg.SHA256Hex(plain),
-			Mime:             mime,
-			Size:             size,
-			Encrypted:        false,
-			KeyVersion:       "",
-		}
-		return m, nil
+	if settings.Cfg.Crypto.Enabled {
+		return s.uploadEncrypted(ctx, traceID, fileID, mime, r)
 	}
-
-	encRes, err := pkg.EncryptAndHash(r, s.key)
-	if err != nil {
-		return nil, err
-	}
-	cid, size, hashHex, err := s.ipfs.Put(ctx, encRes.Reader(), encRes.Size())
-	if err != nil {
-		return nil, err
-	}
-	m := &Manifest{
-		TraceabilityCode: traceID,
-		FileID:           fileID,
-		CID:              cid,
-		Hash:             hashHex,
-		Mime:             mime,
-		Size:             size,
-		Encrypted:        true,
-		KeyVersion:       settings.Cfg.Crypto.KeyVersion,
-	}
-	return m, nil
+	return s.uploadPlaintextStream(ctx, traceID, fileID, mime, r)
 }
 
 // Download fetches from IPFS, validates hash, and decrypts.
@@ -122,4 +89,144 @@ func MarshalManifestJSON(m *Manifest) (string, error) {
 		return "", err
 	}
 	return string(b), nil
+}
+
+func shouldCompressForEvidence(size int64) bool {
+	cfg := settings.Cfg.Compression
+	if !cfg.Enabled {
+		return false
+	}
+	minBytes := cfg.MinSizeBytes
+	maxBytes := cfg.MaxSizeBytes
+	if minBytes <= 0 {
+		minBytes = 5 * 1024 * 1024
+	}
+	if maxBytes <= 0 {
+		maxBytes = 5 * 1024 * 1024 * 1024
+	}
+	if maxBytes < minBytes {
+		maxBytes = minBytes
+	}
+	return size >= minBytes && size <= maxBytes
+}
+
+func compressForEvidence(data []byte) ([]byte, string, error) {
+	alg := strings.ToLower(strings.TrimSpace(settings.Cfg.Compression.Algorithm))
+	if alg == "" {
+		alg = "gzip"
+	}
+	switch alg {
+	case "btae":
+		// Model compression pipeline is not integrated yet; fallback keeps behavior deterministic.
+		compressed, err := pkg.GzipCompress(data)
+		return compressed, "btae_fallback_gzip", err
+	default:
+		compressed, err := pkg.GzipCompress(data)
+		return compressed, "gzip", err
+	}
+}
+
+func (s *Service) uploadEncrypted(ctx context.Context, traceID, fileID, mime string, r io.Reader) (*Manifest, error) {
+	plain, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	sourceHash := pkg.SHA256Hex(plain)
+	compressedHash := ""
+	compressAlg := ""
+	if shouldCompressForEvidence(int64(len(plain))) {
+		compressed, alg, err := compressForEvidence(plain)
+		if err != nil {
+			return nil, err
+		}
+		compressedHash = pkg.SHA256Hex(compressed)
+		compressAlg = alg
+	}
+
+	encRes, err := pkg.EncryptAndHash(bytes.NewReader(plain), s.key)
+	if err != nil {
+		return nil, err
+	}
+	toStore, err := io.ReadAll(encRes.Reader())
+	if err != nil {
+		return nil, err
+	}
+
+	cid, size, storedHash, err := s.ipfs.Put(ctx, bytes.NewReader(toStore), int64(len(toStore)))
+	if err != nil {
+		return nil, err
+	}
+
+	return &Manifest{
+		TraceabilityCode: traceID,
+		FileID:           fileID,
+		CID:              cid,
+		Hash:             storedHash,
+		SourceHash:       sourceHash,
+		CompressedHash:   compressedHash,
+		CompressAlg:      compressAlg,
+		Mime:             mime,
+		Size:             size,
+		Encrypted:        true,
+		KeyVersion:       settings.Cfg.Crypto.KeyVersion,
+	}, nil
+}
+
+func (s *Service) uploadPlaintextStream(ctx context.Context, traceID, fileID, mime string, r io.Reader) (*Manifest, error) {
+	sourceHasher := sha256.New()
+	writerForHash := io.Writer(sourceHasher)
+
+	compressedHash := ""
+	compressAlg := ""
+	var gzipWriter *gzip.Writer
+	var compressedHasher hash.Hash
+	if settings.Cfg.Compression.Enabled {
+		compressedHasher = sha256.New()
+		gzipWriter = gzip.NewWriter(compressedHasher)
+		writerForHash = io.MultiWriter(sourceHasher, gzipWriter)
+		compressAlg = resolveCompressionAlgorithmLabel()
+	}
+
+	teed := io.TeeReader(r, writerForHash)
+	cid, size, storedHash, err := s.ipfs.Put(ctx, teed, -1)
+	if gzipWriter != nil {
+		if closeErr := gzipWriter.Close(); closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	sourceHash := hex.EncodeToString(sourceHasher.Sum(nil))
+	if shouldCompressForEvidence(size) && compressedHasher != nil {
+		compressedHash = hex.EncodeToString(compressedHasher.Sum(nil))
+	} else {
+		compressAlg = ""
+	}
+
+	return &Manifest{
+		TraceabilityCode: traceID,
+		FileID:           fileID,
+		CID:              cid,
+		Hash:             storedHash,
+		SourceHash:       sourceHash,
+		CompressedHash:   compressedHash,
+		CompressAlg:      compressAlg,
+		Mime:             mime,
+		Size:             size,
+		Encrypted:        false,
+		KeyVersion:       "",
+	}, nil
+}
+
+func resolveCompressionAlgorithmLabel() string {
+	alg := strings.ToLower(strings.TrimSpace(settings.Cfg.Compression.Algorithm))
+	switch alg {
+	case "btae":
+		return "btae_fallback_gzip"
+	default:
+		return "gzip"
+	}
 }

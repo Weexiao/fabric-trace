@@ -21,9 +21,13 @@ type CryptoConfig struct {
 }
 
 type CompressionConfig struct {
-	Enabled   bool   // 是否启用压缩上链
-	Algorithm string // 压缩算法: "gzip" (默认), "btae"
-	ModelPath string // BTAE 模型路径（预留）
+	Enabled      bool   // Whether compression evidence is enabled.
+	Algorithm    string // Compression algorithm: "gzip" (default), "btae".
+	ModelPath    string // Reserved for BTAE model path.
+	MinSizeMB    int64  // Minimum file size to trigger compression evidence.
+	MaxSizeMB    int64  // Maximum file size to trigger compression evidence.
+	MinSizeBytes int64  // Computed minimum bytes.
+	MaxSizeBytes int64  // Computed maximum bytes.
 }
 
 type Config struct {
@@ -57,6 +61,19 @@ func Init() (err error) {
 		Cfg.Compression.Algorithm = "gzip"
 	}
 	Cfg.Compression.ModelPath = viper.GetString("compression.model_path")
+	Cfg.Compression.MinSizeMB = viper.GetInt64("compression.min_size_mb")
+	Cfg.Compression.MaxSizeMB = viper.GetInt64("compression.max_size_mb")
+	if Cfg.Compression.MinSizeMB <= 0 {
+		Cfg.Compression.MinSizeMB = 5
+	}
+	if Cfg.Compression.MaxSizeMB <= 0 {
+		Cfg.Compression.MaxSizeMB = 5 * 1024
+	}
+	if Cfg.Compression.MaxSizeMB < Cfg.Compression.MinSizeMB {
+		Cfg.Compression.MaxSizeMB = Cfg.Compression.MinSizeMB
+	}
+	Cfg.Compression.MinSizeBytes = Cfg.Compression.MinSizeMB * 1024 * 1024
+	Cfg.Compression.MaxSizeBytes = Cfg.Compression.MaxSizeMB * 1024 * 1024
 
 	return nil
 }

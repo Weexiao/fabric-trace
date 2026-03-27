@@ -6,6 +6,9 @@ type Manifest struct {
 	FileID           string `json:"fileID"`
 	CID              string `json:"cid"`
 	Hash             string `json:"hash"`
+	SourceHash       string `json:"sourceHash,omitempty"`
+	CompressedHash   string `json:"compressedHash,omitempty"`
+	CompressAlg      string `json:"compressAlg,omitempty"`
 	Mime             string `json:"mime"`
 	Size             int64  `json:"size"`
 	Encrypted        bool   `json:"encrypted"`

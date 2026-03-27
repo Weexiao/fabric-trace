@@ -2,6 +2,7 @@ package controller
 
 import (
 	"backend/pkg"
+	"backend/pkg/storage"
 	"backend/service"
 	"backend/settings"
 	"encoding/hex"
@@ -85,44 +86,60 @@ func GetIndustrialProductInfo(c *gin.Context) {
 	// Enrich product tree with off-chain image hash (derived from stored img filename)
 	productEnriched := enrichProductWithImgHash(res)
 
-	// Query IPFS file manifests (CID/Hash) associated with this traceability code
+	// Query file manifests and aggregate source/compressed hashes for frontend trace view.
 	manifestsRaw, mErr := pkg.ChaincodeQuery("GetFileManifestsByTrace", traceCode)
-	fileHashesByRole := map[string][]string{}
-	// init keys to keep response stable
-	fileHashesByRole["raw_supplier"] = []string{}
-	fileHashesByRole["manufacturer"] = []string{}
-	fileHashesByRole["carrier"] = []string{}
-	fileHashesByRole["dealer"] = []string{}
+	fileHashesByRole := map[string][]string{
+		"raw_supplier": {},
+		"manufacturer": {},
+		"carrier":      {},
+		"dealer":       {},
+	}
+	fileHashEntriesByRole := map[string][]gin.H{
+		"raw_supplier": {},
+		"manufacturer": {},
+		"carrier":      {},
+		"dealer":       {},
+	}
 
 	if mErr == nil && strings.TrimSpace(manifestsRaw) != "" {
 		trim := strings.TrimSpace(manifestsRaw)
-		var arr []any
-		if err := json.Unmarshal([]byte(trim), &arr); err == nil {
-			seen := map[string]map[string]bool{}
+		var manifests []storage.Manifest
+		if err := json.Unmarshal([]byte(trim), &manifests); err == nil {
+			seenLegacy := map[string]map[string]bool{}
+			seenEntries := map[string]map[string]bool{}
 			for k := range fileHashesByRole {
-				seen[k] = map[string]bool{}
+				seenLegacy[k] = map[string]bool{}
+				seenEntries[k] = map[string]bool{}
 			}
-			for _, item := range arr {
-				m, ok := item.(map[string]any)
-				if !ok {
-					continue
-				}
-				role, _ := m["role"].(string)
-				hash, _ := m["hash"].(string)
-				role = strings.TrimSpace(role)
-				hash = strings.TrimSpace(hash)
-				if role == "" || hash == "" {
-					continue
-				}
+
+			for _, m := range manifests {
+				role := strings.TrimSpace(m.Role)
 				if _, exists := fileHashesByRole[role]; !exists {
-					// ignore unknown roles to avoid leaking
 					continue
 				}
-				if seen[role][hash] {
+				sourceHash := strings.TrimSpace(m.SourceHash)
+				if sourceHash == "" {
+					sourceHash = strings.TrimSpace(m.Hash)
+				}
+				compressedHash := strings.TrimSpace(m.CompressedHash)
+				if sourceHash == "" {
 					continue
 				}
-				seen[role][hash] = true
-				fileHashesByRole[role] = append(fileHashesByRole[role], hash)
+
+				if !seenLegacy[role][sourceHash] {
+					seenLegacy[role][sourceHash] = true
+					fileHashesByRole[role] = append(fileHashesByRole[role], sourceHash)
+				}
+
+				pairKey := sourceHash + "|" + compressedHash
+				if seenEntries[role][pairKey] {
+					continue
+				}
+				seenEntries[role][pairKey] = true
+				fileHashEntriesByRole[role] = append(fileHashEntriesByRole[role], gin.H{
+					"sourceHash":     sourceHash,
+					"compressedHash": compressedHash,
+				})
 			}
 		}
 	}
@@ -131,8 +148,9 @@ func GetIndustrialProductInfo(c *gin.Context) {
 		"code":    200,
 		"message": "query success",
 		"data": gin.H{
-			"product":          productEnriched,
-			"fileHashesByRole": fileHashesByRole,
+			"product":               productEnriched,
+			"fileHashesByRole":      fileHashesByRole,
+			"fileHashEntriesByRole": fileHashEntriesByRole,
 		},
 	})
 }

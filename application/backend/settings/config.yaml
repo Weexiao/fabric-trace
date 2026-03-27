@@ -17,7 +17,7 @@ mysql:
 
 storage:
   type: "ipfs"               # ipfs | s3 | local (当前用 ipfs)
-  max_size_mb: 50             # 单文件最大 50MB
+  max_size_mb: 5120           # 单文件最大 5GB
   ipfs:
     api_url: "http://127.0.0.1:5001"  # 本机 IPFS API
     gateway_url: ""          # 可选：对外访问的网关基址
@@ -30,4 +30,6 @@ compression:
   enabled: true               # 是否启用压缩上链
   algorithm: "gzip"           # 压缩算法: "gzip" | "btae"
   model_path: ""              # BTAE 模型路径（预留，当 algorithm=btae 时生效）
+  min_size_mb: 5              # 仅 5MB 及以上文件启用压缩证据
+  max_size_mb: 5120           # 仅 5GB 及以下文件启用压缩证据
 
