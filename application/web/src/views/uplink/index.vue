@@ -232,47 +232,47 @@
       />
 
       <!-- 表格解析并上链 -->
-      <el-divider>{{ $t('common.tableSection') || '表格上链' }}</el-divider>
-      <div class="file-card">
-        <el-upload
-          action="#"
-          :auto-upload="false"
-          :show-file-list="false"
-          :on-change="onTableFileSelected"
-          :before-upload="beforeTableUpload"
-          :limit="1"
-          :disabled="tableUploading || submitting || userType === '零售商'"
-          accept=".csv,.tsv,.txt"
-        >
-          <el-button type="primary" size="mini" :loading="tableUploading" :disabled="userType === '零售商'">{{ $t('common.uploadTable') || '上传表格(CSV/TSV)' }}</el-button>
-        </el-upload>
-        <div v-if="tableFile" class="file-hint">{{ tableFile.name }}</div>
-        <div v-if="tableMeta" class="file-hint">{{ ($t('common.tableMeta') || '共 {rows} 行, {cols} 列').replace('{rows}', tableMeta.rowCount).replace('{cols}', tableMeta.colCount) }}</div>
+<!--      <el-divider>{{ $t('common.tableSection') || '表格上链' }}</el-divider>-->
+<!--      <div class="file-card">-->
+<!--        <el-upload-->
+<!--          action="#"-->
+<!--          :auto-upload="false"-->
+<!--          :show-file-list="false"-->
+<!--          :on-change="onTableFileSelected"-->
+<!--          :before-upload="beforeTableUpload"-->
+<!--          :limit="1"-->
+<!--          :disabled="tableUploading || submitting || userType === '零售商'"-->
+<!--          accept=".csv,.tsv,.txt"-->
+<!--        >-->
+<!--          <el-button type="primary" size="mini" :loading="tableUploading" :disabled="userType === '零售商'">{{ $t('common.uploadTable') || '上传表格(CSV/TSV)' }}</el-button>-->
+<!--        </el-upload>-->
+<!--        <div v-if="tableFile" class="file-hint">{{ tableFile.name }}</div>-->
+<!--        <div v-if="tableMeta" class="file-hint">{{ ($t('common.tableMeta') || '共 {rows} 行, {cols} 列').replace('{rows}', tableMeta.rowCount).replace('{cols}', tableMeta.colCount) }}</div>-->
 
-        <el-table v-if="tableHeaders.length" :data="tablePreviewRows" size="mini" style="width: 100%; margin-top: 8px;">
-          <el-table-column v-for="(h, idx) in tableHeaders" :key="h + idx" :label="h || ('Column ' + (idx + 1))" min-width="120">
-            <template v-slot:default="scope">{{ scope.row[idx] || '-' }}</template>
-          </el-table-column>
-        </el-table>
+<!--        <el-table v-if="tableHeaders.length" :data="tablePreviewRows" size="mini" style="width: 100%; margin-top: 8px;">-->
+<!--          <el-table-column v-for="(h, idx) in tableHeaders" :key="h + idx" :label="h || ('Column ' + (idx + 1))" min-width="120">-->
+<!--            <template v-slot:default="scope">{{ scope.row[idx] || '-' }}</template>-->
+<!--          </el-table-column>-->
+<!--        </el-table>-->
 
-        <div class="file-actions">
-          <span class="offchain-submit-wrapper" @click="onTableSubmitClick">
-            <el-button
-              size="mini"
-              type="primary"
-              plain
-              :disabled="!tableFile || tableUploading || !canUploadTable"
-              :loading="tableUploading"
-              @click.stop="uploadParsedTableMock"
-            >{{ $t('common.submit') || '提 交' }}</el-button>
-          </span>
-          <el-button size="mini" plain :disabled="!tableFile || tableUploading" @click="clearTableFile">{{ $t('common.reset') || '清 空' }}</el-button>
-          <span v-if="tableFile && !canUploadTable" class="offchain-guide">
-            {{ $t('common.offchainNeedTraceTip') || '请先提交上链生成溯源码后再上传附件' }}
-          </span>
-        </div>
-<!--        <div class="file-tip">{{ $t('common.tableTip') || '阶段1为演示模式：解析并压缩表格后，会记录到本地模拟账本，并在追溯页展示。' }}</div>-->
-      </div>
+<!--        <div class="file-actions">-->
+<!--          <span class="offchain-submit-wrapper" @click="onTableSubmitClick">-->
+<!--            <el-button-->
+<!--              size="mini"-->
+<!--              type="primary"-->
+<!--              plain-->
+<!--              :disabled="!tableFile || tableUploading || !canUploadTable"-->
+<!--              :loading="tableUploading"-->
+<!--              @click.stop="uploadParsedTableMock"-->
+<!--            >{{ $t('common.submit') || '提 交' }}</el-button>-->
+<!--          </span>-->
+<!--          <el-button size="mini" plain :disabled="!tableFile || tableUploading" @click="clearTableFile">{{ $t('common.reset') || '清 空' }}</el-button>-->
+<!--          <span v-if="tableFile && !canUploadTable" class="offchain-guide">-->
+<!--            {{ $t('common.offchainNeedTraceTip') || '请先提交上链生成溯源码后再上传附件' }}-->
+<!--          </span>-->
+<!--        </div>-->
+<!--&lt;!&ndash;        <div class="file-tip">{{ $t('common.tableTip') || '阶段1为演示模式：解析并压缩表格后，会记录到本地模拟账本，并在追溯页展示。' }}</div>&ndash;&gt;-->
+<!--      </div>-->
 
       <!-- 链下文件上传与列表 -->
       <el-divider>{{ $t('common.fileSection') || '链下文件' }}</el-divider>
@@ -286,11 +286,11 @@
           :limit="1"
           :disabled="offchainUploading || submitting"
         >
-          <el-button type="primary" size="mini" :loading="offchainUploading">{{ $t('common.uploadFile') || '上传文件(≤5GB)' }}</el-button>
+          <el-button type="primary" size="mini" :loading="offchainUploading">{{ $t('common.uploadFile') || '上传文件' }}</el-button>
         </el-upload>
         <div v-if="offchainFile" class="file-hint">{{ offchainFile.name }} ({{ formatSize(offchainFile.size) }})</div>
         <div v-if="offchainFile && shouldShowCompressionModule" class="file-tip">
-          {{ $t('common.compressionEnabledTip') || '数据压缩模块已启用：将上链源文件哈希与压缩后文件哈希，源文件链下存储。' }}
+          {{ $t('common.compressionEnabledTip') || '数据压缩模块已启用：将上链压缩文件哈希与链下文件源哈希，源文件链下存储。' }}
         </div>
         <div v-else-if="offchainFile" class="file-tip">
           {{ $t('common.compressionSkippedTip') || '未触发压缩模块：仅上链源文件哈希，源文件链下存储。' }}
@@ -314,16 +314,16 @@
             {{ $t('common.offchainNeedTraceTip') || '请先提交上链生成溯源码后再上传附件' }}
           </span>
         </div>
-        <div class="file-tip">{{ $t('common.fileTip') || '文件将加密后存 IPFS，仅在链上存元数据。制造商可下载全部，其他角色仅可下载自己上传的文件。' }}</div>
+<!--        <div class="file-tip">{{ $t('common.fileTip') || '文件将加密后存 IPFS，仅在链上存元数据。制造商可下载全部，其他角色仅可下载自己上传的文件。' }}</div>-->
       </div>
 
       <el-table v-loading="manifestLoading" :data="manifests" size="mini" style="width: 100%; margin-top: 12px;">
         <el-table-column prop="fileID" label="FileID" width="180" />
         <el-table-column prop="cid" label="CID" width="220" />
-        <el-table-column prop="sourceHash" label="Source Hash" min-width="220" show-overflow-tooltip>
+        <el-table-column prop="sourceHash" label="Off-chain Source Hash" min-width="220" show-overflow-tooltip>
           <template v-slot:default="scope">{{ scope.row.sourceHash || scope.row.hash || '-' }}</template>
         </el-table-column>
-        <el-table-column prop="compressedHash" label="Compressed Hash" min-width="220" show-overflow-tooltip>
+        <el-table-column prop="compressedHash" label="Compressed File Hash" min-width="220" show-overflow-tooltip>
           <template v-slot:default="scope">{{ scope.row.compressedHash || '-' }}</template>
         </el-table-column>
         <el-table-column prop="mime" label="MIME" width="140" />

@@ -15,6 +15,48 @@ import (
 	"strings"
 )
 
+const compressedBitsLimit = 256
+
+type prefixCollector struct {
+	max  int
+	data []byte
+}
+
+func (c *prefixCollector) Write(p []byte) (int, error) {
+	if c.max > 0 && len(c.data) < c.max {
+		need := c.max - len(c.data)
+		if need > len(p) {
+			need = len(p)
+		}
+		c.data = append(c.data, p[:need]...)
+	}
+	return len(p), nil
+}
+
+func bytesToBits01(data []byte, maxBits int) []int {
+	if maxBits <= 0 || len(data) == 0 {
+		return nil
+	}
+	capBits := len(data) * 8
+	if capBits > maxBits {
+		capBits = maxBits
+	}
+	bits := make([]int, 0, capBits)
+	for _, b := range data {
+		for i := 7; i >= 0; i-- {
+			if (b>>uint(i))&1 == 1 {
+				bits = append(bits, 1)
+			} else {
+				bits = append(bits, 0)
+			}
+			if len(bits) >= maxBits {
+				return bits
+			}
+		}
+	}
+	return bits
+}
+
 // Service combines crypto and IPFS storage.
 type Service struct {
 	ipfs *IPFSClient
@@ -44,12 +86,12 @@ func NewService() (*Service, error) {
 	return &Service{ipfs: ipfs, key: key}, nil
 }
 
-// Upload encrypts, uploads to IPFS, and returns manifest fields.
-func (s *Service) Upload(ctx context.Context, traceID, fileID, mime string, r io.Reader) (*Manifest, error) {
+// Upload encrypts/uploads source file to IPFS and returns chain manifest metadata.
+func (s *Service) Upload(ctx context.Context, traceID, fileID, mime string, r io.Reader, sourceSize int64) (*Manifest, error) {
 	if settings.Cfg.Crypto.Enabled {
-		return s.uploadEncrypted(ctx, traceID, fileID, mime, r)
+		return s.uploadEncrypted(ctx, traceID, fileID, mime, r, sourceSize)
 	}
-	return s.uploadPlaintextStream(ctx, traceID, fileID, mime, r)
+	return s.uploadPlaintextStream(ctx, traceID, fileID, mime, r, sourceSize)
 }
 
 // Download fetches from IPFS, validates hash, and decrypts.
@@ -126,7 +168,8 @@ func compressForEvidence(data []byte) ([]byte, string, error) {
 	}
 }
 
-func (s *Service) uploadEncrypted(ctx context.Context, traceID, fileID, mime string, r io.Reader) (*Manifest, error) {
+func (s *Service) uploadEncrypted(ctx context.Context, traceID, fileID, mime string, r io.Reader, sourceSize int64) (*Manifest, error) {
+	_ = sourceSize
 	plain, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -134,6 +177,7 @@ func (s *Service) uploadEncrypted(ctx context.Context, traceID, fileID, mime str
 
 	sourceHash := pkg.SHA256Hex(plain)
 	compressedHash := ""
+	compressedBits := []int(nil)
 	compressAlg := ""
 	if shouldCompressForEvidence(int64(len(plain))) {
 		compressed, alg, err := compressForEvidence(plain)
@@ -141,6 +185,7 @@ func (s *Service) uploadEncrypted(ctx context.Context, traceID, fileID, mime str
 			return nil, err
 		}
 		compressedHash = pkg.SHA256Hex(compressed)
+		compressedBits = bytesToBits01(compressed, compressedBitsLimit)
 		compressAlg = alg
 	}
 
@@ -165,6 +210,7 @@ func (s *Service) uploadEncrypted(ctx context.Context, traceID, fileID, mime str
 		Hash:             storedHash,
 		SourceHash:       sourceHash,
 		CompressedHash:   compressedHash,
+		CompressedBits:   compressedBits,
 		CompressAlg:      compressAlg,
 		Mime:             mime,
 		Size:             size,
@@ -173,17 +219,21 @@ func (s *Service) uploadEncrypted(ctx context.Context, traceID, fileID, mime str
 	}, nil
 }
 
-func (s *Service) uploadPlaintextStream(ctx context.Context, traceID, fileID, mime string, r io.Reader) (*Manifest, error) {
+func (s *Service) uploadPlaintextStream(ctx context.Context, traceID, fileID, mime string, r io.Reader, sourceSize int64) (*Manifest, error) {
 	sourceHasher := sha256.New()
 	writerForHash := io.Writer(sourceHasher)
 
 	compressedHash := ""
+	compressedBits := []int(nil)
 	compressAlg := ""
+	applyCompressionEvidence := shouldCompressForEvidence(sourceSize)
 	var gzipWriter *gzip.Writer
 	var compressedHasher hash.Hash
-	if settings.Cfg.Compression.Enabled {
+	var compressedPrefix *prefixCollector
+	if applyCompressionEvidence {
 		compressedHasher = sha256.New()
-		gzipWriter = gzip.NewWriter(compressedHasher)
+		compressedPrefix = &prefixCollector{max: compressedBitsLimit / 8}
+		gzipWriter = gzip.NewWriter(io.MultiWriter(compressedHasher, compressedPrefix))
 		writerForHash = io.MultiWriter(sourceHasher, gzipWriter)
 		compressAlg = resolveCompressionAlgorithmLabel()
 	}
@@ -200,8 +250,11 @@ func (s *Service) uploadPlaintextStream(ctx context.Context, traceID, fileID, mi
 	}
 
 	sourceHash := hex.EncodeToString(sourceHasher.Sum(nil))
-	if shouldCompressForEvidence(size) && compressedHasher != nil {
+	if applyCompressionEvidence && compressedHasher != nil {
 		compressedHash = hex.EncodeToString(compressedHasher.Sum(nil))
+		if compressedPrefix != nil {
+			compressedBits = bytesToBits01(compressedPrefix.data, compressedBitsLimit)
+		}
 	} else {
 		compressAlg = ""
 	}
@@ -213,6 +266,7 @@ func (s *Service) uploadPlaintextStream(ctx context.Context, traceID, fileID, mi
 		Hash:             storedHash,
 		SourceHash:       sourceHash,
 		CompressedHash:   compressedHash,
+		CompressedBits:   compressedBits,
 		CompressAlg:      compressAlg,
 		Mime:             mime,
 		Size:             size,

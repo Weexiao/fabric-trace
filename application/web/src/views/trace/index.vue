@@ -126,12 +126,12 @@
                     <el-form-item v-else-if="safeGet(props.row, '_fileHashEntriesByRole.raw_supplier', []).length" :label="($t('trace.ipfsHash') || '文件哈希') + ':'" class="hash-item">
                       <div>
                         <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.raw_supplier', [])" :key="`${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
-                          <span class="hash-text">{{ ($t('trace.sourceHash') || '源文件哈希') + ': ' + h.sourceHash }}</span>
+                          <span class="hash-text">{{ ($t('trace.sourceHash') || '链下文件源哈希') + ': ' + h.sourceHash }}</span>
                           <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.sourceHash)">{{ $t('actions.copy') || '复制' }}</el-button>
                         </div>
-                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.raw_supplier', []).filter(it => it.compressedHash)" :key="`compressed-${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
-                          <span class="hash-text">{{ ($t('trace.compressedHash') || '压缩文件哈希') + ': ' + h.compressedHash }}</span>
-                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.compressedHash)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.raw_supplier', []).filter(it => it.compressedBits && it.compressedBits.length)" :key="`compressed-bits-${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
+                          <span class="hash-text">{{ ($t('trace.compressedBits') || '压缩文件离散数组(0/1)') + ': ' + h.compressedBits.join('') }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.compressedBits.join(''))">{{ $t('actions.copy') || '复制' }}</el-button>
                         </div>
                       </div>
                     </el-form-item>
@@ -201,12 +201,12 @@
                     <el-form-item v-else-if="safeGet(props.row, '_fileHashEntriesByRole.manufacturer', []).length" :label="($t('trace.ipfsHash') || '文件哈希') + ':'" class="hash-item">
                       <div>
                         <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.manufacturer', [])" :key="`${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
-                          <span class="hash-text">{{ ($t('trace.sourceHash') || '源文件哈希') + ': ' + h.sourceHash }}</span>
+                          <span class="hash-text">{{ ($t('trace.sourceHash') || '链下文件源哈希') + ': ' + h.sourceHash }}</span>
                           <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.sourceHash)">{{ $t('actions.copy') || '复制' }}</el-button>
                         </div>
-                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.manufacturer', []).filter(it => it.compressedHash)" :key="`compressed-${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
-                          <span class="hash-text">{{ ($t('trace.compressedHash') || '压缩文件哈希') + ': ' + h.compressedHash }}</span>
-                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.compressedHash)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.manufacturer', []).filter(it => it.compressedBits && it.compressedBits.length)" :key="`compressed-bits-${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
+                          <span class="hash-text">{{ ($t('trace.compressedBits') || '压缩文件离散数组(0/1)') + ': ' + h.compressedBits.join('') }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.compressedBits.join(''))">{{ $t('actions.copy') || '复制' }}</el-button>
                         </div>
                       </div>
                     </el-form-item>
@@ -276,12 +276,12 @@
                     <el-form-item v-else-if="safeGet(props.row, '_fileHashEntriesByRole.carrier', []).length" :label="($t('trace.ipfsHash') || '文件哈希') + ':'" class="hash-item">
                       <div>
                         <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.carrier', [])" :key="`${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
-                          <span class="hash-text">{{ ($t('trace.sourceHash') || '源文件哈希') + ': ' + h.sourceHash }}</span>
+                          <span class="hash-text">{{ ($t('trace.sourceHash') || '链下文件源哈希') + ': ' + h.sourceHash }}</span>
                           <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.sourceHash)">{{ $t('actions.copy') || '复制' }}</el-button>
                         </div>
-                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.carrier', []).filter(it => it.compressedHash)" :key="`compressed-${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
-                          <span class="hash-text">{{ ($t('trace.compressedHash') || '压缩文件哈希') + ': ' + h.compressedHash }}</span>
-                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.compressedHash)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.carrier', []).filter(it => it.compressedBits && it.compressedBits.length)" :key="`compressed-bits-${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
+                          <span class="hash-text">{{ ($t('trace.compressedBits') || '压缩文件离散数组(0/1)') + ': ' + h.compressedBits.join('') }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.compressedBits.join(''))">{{ $t('actions.copy') || '复制' }}</el-button>
                         </div>
                       </div>
                     </el-form-item>
@@ -351,12 +351,12 @@
                     <el-form-item v-else-if="safeGet(props.row, '_fileHashEntriesByRole.dealer', []).length" :label="($t('trace.ipfsHash') || '文件哈希') + ':'" class="hash-item">
                       <div>
                         <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.dealer', [])" :key="`${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
-                          <span class="hash-text">{{ ($t('trace.sourceHash') || '源文件哈希') + ': ' + h.sourceHash }}</span>
+                          <span class="hash-text">{{ ($t('trace.sourceHash') || '链下文件源哈希') + ': ' + h.sourceHash }}</span>
                           <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.sourceHash)">{{ $t('actions.copy') || '复制' }}</el-button>
                         </div>
-                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.dealer', []).filter(it => it.compressedHash)" :key="`compressed-${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
-                          <span class="hash-text">{{ ($t('trace.compressedHash') || '压缩文件哈希') + ': ' + h.compressedHash }}</span>
-                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.compressedHash)">{{ $t('actions.copy') || '复制' }}</el-button>
+                        <div v-for="(h, idx) in safeGet(props.row, '_fileHashEntriesByRole.dealer', []).filter(it => it.compressedBits && it.compressedBits.length)" :key="`compressed-bits-${h.sourceHash}-${h.compressedHash}-${idx}`" class="hash-row">
+                          <span class="hash-text">{{ ($t('trace.compressedBits') || '压缩文件离散数组(0/1)') + ': ' + h.compressedBits.join('') }}</span>
+                          <el-button type="text" icon="el-icon-document-copy" @click.prevent="copyText(h.compressedBits.join(''))">{{ $t('actions.copy') || '复制' }}</el-button>
                         </div>
                       </div>
                     </el-form-item>
@@ -585,8 +585,13 @@ export default {
             .map((it) => {
               const sourceHash = it && it.sourceHash ? String(it.sourceHash) : ''
               const compressedHash = it && it.compressedHash ? String(it.compressedHash) : ''
+              const compressedBits = Array.isArray(it && it.compressedBits)
+                ? it.compressedBits
+                  .map(v => (Number(v) === 1 ? 1 : 0))
+                  .slice(0, 256)
+                : []
               if (!sourceHash) return null
-              return { sourceHash, compressedHash }
+              return { sourceHash, compressedHash, compressedBits }
             })
             .filter(Boolean)
         }
@@ -607,18 +612,23 @@ export default {
         if (!acc[role]) return
         const sourceHash = m && (m.sourceHash || m.hash) ? String(m.sourceHash || m.hash) : ''
         const compressedHash = m && m.compressedHash ? String(m.compressedHash) : ''
+        const compressedBits = Array.isArray(m && m.compressedBits)
+          ? m.compressedBits
+            .map(v => (Number(v) === 1 ? 1 : 0))
+            .slice(0, 256)
+          : []
         if (!sourceHash) return
         const key = `${sourceHash}|${compressedHash}`
         if (seen[role].has(key)) return
         seen[role].add(key)
-        acc[role].push({ sourceHash, compressedHash })
+        acc[role].push({ sourceHash, compressedHash, compressedBits })
       })
 
       if (manifests.length) return acc
 
       const old = this.normalizeFileHashesByRole(data)
       Object.keys(acc).forEach((role) => {
-        acc[role] = (old[role] || []).map(h => ({ sourceHash: h, compressedHash: '' }))
+        acc[role] = (old[role] || []).map(h => ({ sourceHash: h, compressedHash: '', compressedBits: [] }))
       })
       return acc
     },

@@ -63,7 +63,7 @@ func UploadFile(c *gin.Context) {
 	}
 	defer fh.Close()
 
-	manifest, err := svc.Upload(c.Request.Context(), traceID, fileID, mimeType, fh)
+	manifest, err := svc.Upload(c.Request.Context(), traceID, fileID, mimeType, fh, fileHeader.Size)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "upload failed: " + err.Error()})
 		return

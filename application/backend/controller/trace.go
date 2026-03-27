@@ -122,6 +122,10 @@ func GetIndustrialProductInfo(c *gin.Context) {
 					sourceHash = strings.TrimSpace(m.Hash)
 				}
 				compressedHash := strings.TrimSpace(m.CompressedHash)
+				compressedBits := m.CompressedBits
+				if len(compressedBits) == 0 && compressedHash != "" {
+					compressedBits = hashHexToBits01(compressedHash)
+				}
 				if sourceHash == "" {
 					continue
 				}
@@ -139,6 +143,7 @@ func GetIndustrialProductInfo(c *gin.Context) {
 				fileHashEntriesByRole[role] = append(fileHashEntriesByRole[role], gin.H{
 					"sourceHash":     sourceHash,
 					"compressedHash": compressedHash,
+					"compressedBits": compressedBits,
 				})
 			}
 		}
@@ -153,6 +158,27 @@ func GetIndustrialProductInfo(c *gin.Context) {
 			"fileHashEntriesByRole": fileHashEntriesByRole,
 		},
 	})
+}
+
+func hashHexToBits01(hashHex string) []int {
+	if strings.TrimSpace(hashHex) == "" {
+		return nil
+	}
+	b, err := hex.DecodeString(strings.TrimSpace(hashHex))
+	if err != nil || len(b) == 0 {
+		return nil
+	}
+	bits := make([]int, 0, len(b)*8)
+	for _, by := range b {
+		for i := 7; i >= 0; i-- {
+			if (by>>uint(i))&1 == 1 {
+				bits = append(bits, 1)
+			} else {
+				bits = append(bits, 0)
+			}
+		}
+	}
+	return bits
 }
 
 // enrichProductWithImgHash adds `imgHash` fields (sha256 hex) under each role input if an img filename is present.
