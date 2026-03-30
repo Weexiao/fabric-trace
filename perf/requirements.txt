@@ -1,0 +1,2 @@
+# No third-party Python dependencies are required for perf/extract_tape_metrics.py
+

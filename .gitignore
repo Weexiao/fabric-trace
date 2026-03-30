@@ -1,3 +1,5 @@
 ./.idea
 
 ./application/backend/.idea
+
+*.log
