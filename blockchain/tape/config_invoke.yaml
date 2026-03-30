@@ -47,12 +47,14 @@ chaincode: trace
 args:
   - Uplink
   - 1
+  - randomString18
   - randomString8
   - randomString8
   - randomString8
   - randomString8
   - randomString8
   - randomString8
+  - ""
 
 
 # Tx submiter information

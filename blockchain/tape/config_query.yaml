@@ -45,7 +45,7 @@ chaincode: trace
 # randomString$length
 # randomNumber$min_$max
 args:
-  - GetUserInfo
+  - GetIndustrialProductList
   - 1
 
 

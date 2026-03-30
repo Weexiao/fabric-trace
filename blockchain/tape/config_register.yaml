@@ -50,7 +50,7 @@ chaincode: trace
 args:
   - RegisterUser
   - 1
-  - randomString8
+  - 原料供应商
   - randomString8
 
 

@@ -40,8 +40,7 @@ Options:
   --backend-url <url>           Backend base URL for healthcheck (default: http://127.0.0.1:9090)
   --wait-backend-seconds <num>  Healthcheck timeout (default: 60)
   --collect-docker-stats <0|1>  Capture docker stats per round (default: 1)
-  --dry-run                     Print commands only
-  --help                        Show this help
+  --tape-num-of-conn <num>      Override tape num_of_conn in runtime configs (default: 4)
 
 Notes:
   - start.sh internally clears old network and chain data via stop.sh.
@@ -87,39 +86,32 @@ parse_csv_to_array() {
   IFS=',' read -r -a out_ref <<<"$raw"
 }
 
+prepare_tape_config() {
+  local scene="$1"
+  local source_config
+  source_config=$(config_for_scene "$scene")
+
+  local src="$TAPE_DIR/$source_config"
+  local dst_dir="$RUN_DIR/meta/runtime_configs"
+  mkdir -p "$dst_dir"
+  local dst="$dst_dir/${scene}.yaml"
+
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    # Keep dry-run side effects minimal while preserving command rendering.
+    echo "$source_config"
+    return 0
+  fi
+
+  cp "$src" "$dst"
+  sed -E -i "s/^num_of_conn:.*/num_of_conn: ${TAPE_NUM_OF_CONN}/" "$dst"
+  sed -E -i "s/^client_per_conn:.*/client_per_conn: ${TAPE_CLIENT_PER_CONN}/" "$dst"
+  echo "$dst"
+}
+
 config_for_scene() {
   case "$1" in
     register) echo "config_register.yaml" ;;
     invoke) echo "config_invoke.yaml" ;;
-    query) echo "config_query.yaml" ;;
-    *)
-      echo "unsupported scene: $1" >&2
-      return 1
-      ;;
-  esac
-}
-
-collect_docker_stats() {
-  local scene="$1"
-  local n="$2"
-  local round="$3"
-  local out="$RUN_DIR/raw/docker_stats_${scene}_n${n}_r${round}.csv"
-
-  if [[ "$COLLECT_DOCKER_STATS" -ne 1 ]]; then
-    return 0
-  fi
-
-  if [[ "$DRY_RUN" -eq 1 ]]; then
-    log "+ docker stats --no-stream > $out" | tee -a "$RUN_LOG"
-    return 0
-  fi
-
-  if ! command -v docker >/dev/null 2>&1; then
-    log "docker not found, skip docker stats" | tee -a "$RUN_LOG"
-    return 0
-  fi
-
-  docker stats --no-stream --format "{{.Name}},{{.CPUPerc}},{{.MemUsage}},{{.NetIO}},{{.BlockIO}},{{.PIDs}}" >"$out" || true
 }
 
 run_tape_case() {
@@ -127,7 +119,7 @@ run_tape_case() {
   local n="$2"
   local round="$3"
   local config
-  config=$(config_for_scene "$scene")
+  config=$(prepare_tape_config "$scene")
 
   local log_file="$RUN_DIR/raw/tape_${scene}_n${n}_r${round}.log"
   local started_at ended_at duration rc
@@ -139,14 +131,39 @@ run_tape_case() {
   local cmd="cd \"$TAPE_DIR\" && ./tape -c \"$config\" -n \"$n\" run"
   log "+ $cmd" | tee -a "$RUN_LOG"
 
+  local attempt=1
+  local max_attempts=1
+  if [[ "$RETRY_ON_GOAWAY" -eq 1 ]]; then
+    max_attempts=$((GOAWAY_MAX_RETRIES + 1))
+  fi
+
   if [[ "$DRY_RUN" -eq 1 ]]; then
     echo "[dry-run] $cmd" >"$log_file"
     rc=0
   else
-    set +e
-    bash -lc "$cmd" >"$log_file" 2>&1
-    rc=$?
-    set -e
+    while true; do
+      set +e
+      bash -lc "$cmd" >"$log_file" 2>&1
+      rc=$?
+      set -e
+
+      if [[ "$rc" -eq 0 ]]; then
+        break
+      fi
+
+      if [[ "$attempt" -ge "$max_attempts" ]]; then
+        break
+      fi
+
+      if grep -Eq "ENHANCE_YOUR_CALM|too_many_pings|GoAway" "$log_file"; then
+        log "scene=${scene} n=${n} round=${round} got GOAWAY too_many_pings; retry ${attempt}/${GOAWAY_MAX_RETRIES} after ${GOAWAY_RETRY_BACKOFF_SECONDS}s" | tee -a "$RUN_LOG"
+        sleep "$GOAWAY_RETRY_BACKOFF_SECONDS"
+        attempt=$((attempt + 1))
+        continue
+      fi
+
+      break
+    done
   fi
 
   ended_at=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -155,7 +172,7 @@ run_tape_case() {
   echo "${scene},${n},${round},${started_at},${ended_at},${duration},${rc},${log_file}" >>"$SUMMARY_CSV"
 
   local metrics_csv="$RUN_DIR/summary/tape_metrics.csv"
-  if [[ "$DRY_RUN" -eq 1 ]]; then
+  config=$(config_for_scene "$scene")
     echo "${scene},${n},${round},NA,NA,NA,NA" >>"$metrics_csv"
   else
     python3 "$ROOT_DIR/perf/extract_tape_metrics.py" \
@@ -167,10 +184,6 @@ run_tape_case() {
       --append >>"$RUN_LOG" 2>&1 || true
   fi
 
-  collect_docker_stats "$scene" "$n" "$round"
-
-  if [[ "$rc" -ne 0 ]]; then
-    log "scene=${scene} n=${n} round=${round} failed (rc=${rc})" | tee -a "$RUN_LOG"
     return "$rc"
   fi
 
@@ -183,28 +196,10 @@ start_backend_if_needed() {
       log "Skip backend startup (backend-mode=none)" | tee -a "$RUN_LOG"
       ;;
     local)
-      local cmd="cd \"$BACKEND_DIR\" && nohup go run main.go > \"$RUN_DIR/logs/backend.log\" 2>&1 & echo \\\$! > \"$RUN_DIR/meta/backend.pid\""
-      run_cmd "$cmd"
-      wait_for_backend "$BACKEND_URL" "$WAIT_BACKEND_SECONDS"
-      ;;
-    docker)
-      run_cmd "cd \"$APP_DIR\" && ./start_docker.sh"
-      wait_for_backend "$BACKEND_URL" "$WAIT_BACKEND_SECONDS"
-      ;;
-    *)
-      echo "invalid backend-mode: $BACKEND_MODE" >&2
-      exit 1
-      ;;
-  esac
-}
-
-stop_backend_if_needed() {
-  case "$BACKEND_MODE" in
-    local)
-      local pid_file="$RUN_DIR/meta/backend.pid"
-      if [[ -f "$pid_file" ]]; then
-        local pid
-        pid=$(cat "$pid_file")
+    set +e
+    bash -lc "$cmd" >"$log_file" 2>&1
+    rc=$?
+    set -e
         if [[ -n "$pid" ]]; then
           run_cmd "kill $pid || true"
         fi
@@ -268,6 +263,30 @@ while [[ $# -gt 0 ]]; do
       COLLECT_DOCKER_STATS="$2"
       shift 2
       ;;
+    --tape-num-of-conn)
+      TAPE_NUM_OF_CONN="$2"
+      shift 2
+      ;;
+    --tape-client-per-conn)
+      TAPE_CLIENT_PER_CONN="$2"
+      shift 2
+      ;;
+    --inter-case-sleep-seconds)
+      INTER_CASE_SLEEP_SECONDS="$2"
+      shift 2
+      ;;
+    --retry-on-goaway)
+      RETRY_ON_GOAWAY="$2"
+      shift 2
+      ;;
+    --goaway-max-retries)
+      GOAWAY_MAX_RETRIES="$2"
+      shift 2
+      ;;
+    --goaway-retry-backoff-seconds)
+      GOAWAY_RETRY_BACKOFF_SECONDS="$2"
+      shift 2
+      ;;
     --dry-run)
       DRY_RUN=1
       shift
@@ -306,6 +325,12 @@ SUMMARY_CSV="$RUN_DIR/summary/rounds.csv"
   echo "backend_mode=$BACKEND_MODE"
   echo "backend_url=$BACKEND_URL"
   echo "collect_docker_stats=$COLLECT_DOCKER_STATS"
+  echo "tape_num_of_conn=$TAPE_NUM_OF_CONN"
+  echo "tape_client_per_conn=$TAPE_CLIENT_PER_CONN"
+  echo "inter_case_sleep_seconds=$INTER_CASE_SLEEP_SECONDS"
+  echo "retry_on_goaway=$RETRY_ON_GOAWAY"
+  echo "goaway_max_retries=$GOAWAY_MAX_RETRIES"
+  echo "goaway_retry_backoff_seconds=$GOAWAY_RETRY_BACKOFF_SECONDS"
   echo "dry_run=$DRY_RUN"
   echo "started_at_utc=$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 } >"$RUN_DIR/meta/run.env"
@@ -325,23 +350,6 @@ if [[ "$DO_SEED" -eq 1 ]]; then
 fi
 
 declare -a scene_arr
-parse_csv_to_array "$SCENARIOS" scene_arr
-
-declare -a n_arr
-parse_csv_to_array "$N_LEVELS" n_arr
-
-for scene in "${scene_arr[@]}"; do
-  for n in "${n_arr[@]}"; do
-    for ((r=1; r<=ROUNDS; r++)); do
-      run_tape_case "$scene" "$n" "$r" || true
-    done
-  done
-done
-
-stop_backend_if_needed
-
-if [[ "$STOP_NETWORK" -eq 1 ]]; then
-  log "Stopping network via blockchain/network/stop.sh" | tee -a "$RUN_LOG"
   run_cmd "cd \"$NETWORK_DIR\" && ./stop.sh"
 fi
 
