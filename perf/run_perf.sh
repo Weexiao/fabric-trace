@@ -29,6 +29,10 @@ INTER_CASE_SLEEP_SECONDS=3
 RETRY_ON_GOAWAY=1
 GOAWAY_MAX_RETRIES=2
 GOAWAY_RETRY_BACKOFF_SECONDS=15
+TAPE_SIGNERS=1
+TAPE_PARALLEL=1
+TAPE_RATE=0
+TAPE_BURST=100
 
 usage() {
   cat <<'EOF'
@@ -56,6 +60,10 @@ Options:
   --goaway-max-retries <num>    Max retries per case on GOAWAY (default: 2)
   --goaway-retry-backoff-seconds <num>
                                 Backoff seconds before GOAWAY retry (default: 15)
+  --tape-signers <num>          tape --signers value (default: 1)
+  --tape-parallel <num>         tape --parallel value (default: 1)
+  --tape-rate <num>             tape --rate value; 0 means unlimited (default: 0)
+  --tape-burst <num>            tape --burst value (default: 100)
   --dry-run                     Print commands only
   --help                        Show this help
 
@@ -173,7 +181,7 @@ run_tape_case() {
   local started_s
   started_s=$(date +%s)
 
-  local cmd="cd \"$TAPE_DIR\" && ./tape -c \"$config\" -n \"$n\" run"
+  local cmd="cd \"$TAPE_DIR\" && ./tape -c \"$config\" -n \"$n\" --signers \"$TAPE_SIGNERS\" --parallel \"$TAPE_PARALLEL\" --rate \"$TAPE_RATE\" --burst \"$TAPE_BURST\" run"
   log "+ $cmd" | tee -a "$RUN_LOG"
 
   local attempt=1
@@ -356,6 +364,22 @@ while [[ $# -gt 0 ]]; do
       GOAWAY_RETRY_BACKOFF_SECONDS="$2"
       shift 2
       ;;
+    --tape-signers)
+      TAPE_SIGNERS="$2"
+      shift 2
+      ;;
+    --tape-parallel)
+      TAPE_PARALLEL="$2"
+      shift 2
+      ;;
+    --tape-rate)
+      TAPE_RATE="$2"
+      shift 2
+      ;;
+    --tape-burst)
+      TAPE_BURST="$2"
+      shift 2
+      ;;
     --dry-run)
       DRY_RUN=1
       shift
@@ -399,6 +423,10 @@ echo "scene,n,round,started_at_utc,ended_at_utc,duration_sec,exit_code,log_file"
   echo "retry_on_goaway=$RETRY_ON_GOAWAY"
   echo "goaway_max_retries=$GOAWAY_MAX_RETRIES"
   echo "goaway_retry_backoff_seconds=$GOAWAY_RETRY_BACKOFF_SECONDS"
+  echo "tape_signers=$TAPE_SIGNERS"
+  echo "tape_parallel=$TAPE_PARALLEL"
+  echo "tape_rate=$TAPE_RATE"
+  echo "tape_burst=$TAPE_BURST"
   echo "dry_run=$DRY_RUN"
   echo "started_at_utc=$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 } >"$RUN_DIR/meta/run.env"
